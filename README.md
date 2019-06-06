@@ -1,7 +1,15 @@
 # Creating a DLL for writing data
 
+
+
 In this example, we create a dll/shared library that be loaded dynamically from alsvinn on runtime.
 
+## Requirements
+
+  * netcdf
+  * MPI (OpenMPI, MVAPICH, MPICH, etc)
+  * cmake
+    
 To compile, run
 
     mkdir build
@@ -15,6 +23,17 @@ To run
     <path to alsuqcli>/alsuqcli ../examples/1d/sodshocktube/sodshocktube.xml
 
 The DLL is rather simple and just writes the output to text file (readable by ```numpy.loadtxt``` in Python/numpy)
+
+## Running as a standalone
+
+It is also possible to run the code as a standalone program. One can download two different data files from [polybox](https://polybox.ethz.ch/index.php/s/NbVIkVw7Au8ULNE) (or run Alsvinn and generate the datafiles). To run the standalone program, do
+
+    ./standalone/standalone <filename.nc>
+
+eg.
+
+    ./standalone/standalone kh_2d.nc
+    
 
 ## Some comments on the code
 

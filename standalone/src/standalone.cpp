@@ -45,7 +45,6 @@ std::vector<DataField> read_file(const std::string& file_name) {
 
     for (int varid : variable_ids) {
         std::vector<char> name_vector(NC_MAX_NAME, 0);
-        std::cout << NC_MAX_NAME << std::endl;
 
         NETCDF_SAFE_CALL(nc_inq_varname(file, varid, name_vector.data()));
 

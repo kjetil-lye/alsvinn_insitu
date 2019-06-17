@@ -1,4 +1,5 @@
 #include <iostream>
+//#include <dll_adaptor.hpp>
 #include <dll_writer.hpp>
 #include <netcdf.h>
 #include <sstream>
@@ -26,7 +27,7 @@ struct DataField {
     } \
 }
 
-
+//to mimic simulation
 std::vector<DataField> read_file(const std::string& file_name) {
     std::vector<DataField> datafields;
 
@@ -60,7 +61,6 @@ std::vector<DataField> read_file(const std::string& file_name) {
         auto& field = datafields.back();
 
         field.name = name;
-
 
 
 
@@ -99,12 +99,12 @@ std::vector<DataField> read_file(const std::string& file_name) {
             field.nz = lengths[2];
         }
 
-    }
+    } //end for over variables ids
 
     NETCDF_SAFE_CALL(nc_close(file));
 
     return datafields;
-}
+}//end read_file
 
 
 int main(int argc, char** argv) {
@@ -121,12 +121,17 @@ int main(int argc, char** argv) {
 
     auto fields = read_file(file_name);
 
+//initialized paramaters as a "MyParameters" object,  writer
     auto parameters = make_parameters();
+    //create returns a myData object
     auto data = create("standalone", "v0.0.1", parameters);
+
+  //setup communictaion /(defines mpiComm=MPI_COMM_WORLD (communication between all processes) in MyParameters)
     set_mpi_comm(data, parameters, MPI_COMM_WORLD);
 
     set_parameter(parameters, "basename", "standalone_base");
 
+//sets timestep 0 in mydata
     new_timestep(data, parameters, 0.0, 0);
 
     for (auto& field : fields) {

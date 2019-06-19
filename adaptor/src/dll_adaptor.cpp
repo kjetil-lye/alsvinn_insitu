@@ -9,10 +9,7 @@
 #include <vtkCPInputDataDescription.h>
 #include <vtkCPProcessor.h>
 #include <vtkCPPythonScriptPipeline.h>
-#include <vtkCellData.h>
-#include <vtkCellType.h>
 #include <vtkDoubleArray.h>
-#include <vtkFloatArray.h>
 #include <vtkImageData.h>
 #include <vtkNew.h>
 #include <vtkPointData.h>
@@ -48,14 +45,15 @@ vtkImageData* VTKGrid = NULL;
         const char *script_char = "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/gridwriter.py";
 
         std::cout<< "Python script : "<< script_loc<<std::endl;
+        std::cout<< "Python script : "<< script_char<<std::endl;
+
 
        if(script_loc !="")
         {
           vtkNew<vtkCPPythonScriptPipeline> pipeline;
-            std::cout << "In create 1" << std::endl;
+
           pipeline->Initialize(script_char);
 
-          std::cout << "In create 2" << std::endl;
           Processor->AddPipeline(pipeline.GetPointer());
 
 
@@ -113,35 +111,40 @@ vtkImageData* VTKGrid = NULL;
         auto my_parameters = static_cast<MyParameters*>(parameters);
         auto timeStep = my_data->getCurrentTimestep();
 
-        vtkNew<vtkCPDataDescription> dataDescription;
+        vtkCPDataDescription* dataDescription = vtkCPDataDescription::New();
         dataDescription->SetTimeData(time, timeStep);
         dataDescription->AddInput("input");
 
         // the last time step shuld always be output
         if(my_data->getEndTimestep()){
               dataDescription->ForceOutputOn();
+              std::cout << "force" << std::endl;
         }
 
 
-        if (Processor->RequestDataDescription(dataDescription.GetPointer())!=0)
+
+        if (Processor->RequestDataDescription(dataDescription)!=0)
         {
-            // Create an axis-aligned, uniform grid
-            vtkImageData* grid = vtkImageData::New();
-            grid->SetExtent(ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
-            dataDescription->GetInputDescriptionByName("input")->SetGrid(grid);
+          if (VTKGrid == NULL)
+          {
+            VTKGrid = vtkImageData::New();
+            VTKGrid->SetExtent(ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
+          }
+
+            dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
             // For structured grids we need to specify the global data extents
             dataDescription->GetInputDescriptionByName("input")->SetWholeExtent(ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
-            grid->Delete();
+
             // Create a field associated with points
             vtkDoubleArray* field_array = vtkDoubleArray::New();
             field_array->SetName(variable_name);
-            field_array->SetArray(variable_data, grid->GetNumberOfPoints(), 0);
-            grid->GetPointData()->AddArray(field_array);
+            field_array->SetArray(variable_data, VTKGrid->GetNumberOfPoints(), 1);
+            VTKGrid->GetPointData()->AddArray(field_array);
             field_array->Delete();
             Processor->CoProcess(dataDescription);
             }
             dataDescription->Delete();
-
+  std::cout << "In ccp 5" << std::endl;
 
     }
 
@@ -215,9 +218,9 @@ vtkImageData* VTKGrid = NULL;
         PRINT_PARAM(time);
         PRINT_PARAM(timestep_number);
 
-        auto my_data = static_cast<MyData*>(data);
-        if(false) my_data->setEndTimeStep(true);
+    //    auto my_data = static_cast<MyData*>(data);
+    //    if(false) my_data->setEndTimeStep(true);
 
     }
 
-}
+}//extern c

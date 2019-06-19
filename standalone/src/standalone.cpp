@@ -61,7 +61,7 @@ std::vector<DataField> read_file(const std::string& file_name) {
 
         field.name = name;
 
-        int number_of_dimensions = 0;
+        int number_of_dimensions = 2;
 
         NETCDF_SAFE_CALL(nc_inq_varndims(file, varid, &number_of_dimensions));
 
@@ -69,15 +69,15 @@ std::vector<DataField> read_file(const std::string& file_name) {
 
         NETCDF_SAFE_CALL(nc_inq_vardimid(file, varid, dimension_ids.data()));
 
-        std::vector<size_t> lengths(number_of_dimensions, 1);
+        std::vector<size_t> v_len(number_of_dimensions, 1);
 
         for (int dim = 0; dim < number_of_dimensions; ++dim) {
-            NETCDF_SAFE_CALL(nc_inq_dimlen(file, dimension_ids[dim], &lengths[dim]));
+            NETCDF_SAFE_CALL(nc_inq_dimlen(file, dimension_ids[dim], &v_len[dim]));
         }
 
         size_t total_size = 1;
 
-        for (size_t length : lengths) {
+        for (size_t length : v_len) {
             total_size *= length;
         }
 
@@ -85,14 +85,14 @@ std::vector<DataField> read_file(const std::string& file_name) {
 
         NETCDF_SAFE_CALL(nc_get_var_double(file, varid, field.data.data()));
 
-        field.nx = lengths[0];
+        field.nx = v_len[0];
 
         if (number_of_dimensions > 1) {
-            field.ny = lengths[1];
+            field.ny = v_len[1];
         }
 
         if (number_of_dimensions > 2) {
-            field.nz = lengths[2];
+            field.nz = v_len[2];
         }
 
     } //end for over variables ids
@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
     auto parameters = make_parameters();
 
 
-    std::cout << "00" << std::endl;
+    std::cout << "0bgsfffffffffffffffffffffffffffffff0" << std::endl;
     //create returns a myData object
     auto data = create("standalone", "v0.0.1", parameters);
 std::cout << "000" << std::endl;
@@ -138,6 +138,7 @@ for ( int timeStep = 0; timeStep < 4; timeStep++)
 
   new_timestep(data, parameters,time, timeStep);
   std::cout << timeStep << std::endl;
+  std::cout << fields.size() << std::endl;
 
       for (auto& field : fields) {
           std::cout<<field.name<<std::endl;

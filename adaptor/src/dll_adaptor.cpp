@@ -5,31 +5,65 @@
 #include <limits>
 #include <iomanip>
 #include <iostream>
-
-
 #include <vtkCPDataDescription.h>
 #include <vtkCPInputDataDescription.h>
 #include <vtkCPProcessor.h>
 #include <vtkCPPythonScriptPipeline.h>
+#include <vtkCellData.h>
+#include <vtkCellType.h>
+#include <vtkDoubleArray.h>
+#include <vtkFloatArray.h>
+#include <vtkImageData.h>
 #include <vtkNew.h>
+#include <vtkPointData.h>
+#include <vtkPoints.h>
 
 // Simple macro to print parameters
 #define PRINT_PARAM(X) std::cout << "Value of " << #X << " is " << X << std::endl
 extern "C" {
 
+vtkCPProcessor* Processor = NULL;
+vtkImageData* VTKGrid = NULL;
 
     DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
         const char* simulator_version, void* parameters) {
 
         std::cout << "In create" << std::endl;
+        /*auto my_parameters = static_cast<MyParameters*>(parameters);
+        auto script_loc = my_parameters->getParameter("pipelineScript");
+        const char *script_char = script_loc.c_str();*/
 
         // Initialize catalyst, set processes
-        vtkCPProcessor* Processor = vtkCPProcessor::New();
-        Processor->Initialize();
-        //@Todo: should be able to load script for pipeline: from     ParaView Catalyst User’s Guide
+        if (Processor == NULL)
+        {
+          Processor = vtkCPProcessor::New();
+          Processor->Initialize();
+        }
+        else
+        {
+          Processor->RemoveAllPipelines();
+        }
+
+        std::string script_loc = "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/gridwriter.py";
+        const char *script_char = "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/gridwriter.py";
+
+        std::cout<< "Python script : "<< script_loc<<std::endl;
+
+       if(script_loc !="")
+        {
+          vtkNew<vtkCPPythonScriptPipeline> pipeline;
+            std::cout << "In create 1" << std::endl;
+          pipeline->Initialize(script_char);
+
+          std::cout << "In create 2" << std::endl;
+          Processor->AddPipeline(pipeline.GetPointer());
+
+
+        }
+
+        //@Todo: should be able to load multiple script for pipeline:
         /*
         scripts are passed in as command line arguments
-
         for(int i=0;i<numScripts;i++)
         {
         vtkCPPythonScriptPipeline* pipeline =
@@ -39,8 +73,6 @@ extern "C" {
         pipeline->Delete();
         }
         */
-
-
 
         PRINT_PARAM(simulator_name);
         PRINT_PARAM(simulator_version);
@@ -52,56 +84,33 @@ extern "C" {
 
     DLL_ADAPTOR_EXPORT void delete_data(void* data) {
         std::cout << "In delete_data" << std::endl;
-        PRINT_PARAM(data);
-        if(Processor)
-        {
-          Processor->Delete();
-          Processor = NULL;
-        }
+          if (Processor)
+          {
+            Processor->Delete();
+            Processor = NULL;
+          }
+          if (VTKGrid)
+          {
+            VTKGrid->Delete();
+            VTKGrid = NULL;
+          }
         delete static_cast<MyData*>(data);
     }
 
-    DLL_ADAPTOR_EXPORT void write_data(void* data, void* parameters, double time,
-        const char* variable_name, const double* variable_data, int nx, int ny, int nz,
+/**
+* CoProcesses
+*
+* @param nx, ny, nz are number of ghost cells in respective direction
+*/
+    DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double time,
+        const char* variable_name,  double* variable_data, int nx, int ny, int nz,
         int ngx, int ngy, int ngz, double ax, double ay, double az, double bx,
         double by, double bz, int gpu_number ) {
-        std::cout << "In write" << std::endl;
 
-        PRINT_PARAM(data);
-        PRINT_PARAM(parameters);
-        PRINT_PARAM(time);
-        PRINT_PARAM(variable_name);
-        PRINT_PARAM(variable_data);
-
-        PRINT_PARAM(nx);
-        PRINT_PARAM(ny);
-        PRINT_PARAM(nz);
-
-        PRINT_PARAM(ngx);
-        PRINT_PARAM(ngy);
-        PRINT_PARAM(ngz);
-
-        PRINT_PARAM(ax);
-        PRINT_PARAM(ay);
-        PRINT_PARAM(az);
-
-        PRINT_PARAM(bx);
-        PRINT_PARAM(by);
-        PRINT_PARAM(bz);
-
-        PRINT_PARAM(gpu_number);
+        std::cout << "================ CatalystCoProcess" << std::endl;
 
         auto my_data = static_cast<MyData*>(data);
         auto my_parameters = static_cast<MyParameters*>(parameters);
-        /*In the write function, we will just write the data to a text file
-        // readable by numpy
-        auto output_name = my_parameters->getParameter("basename")
-            + "_" + variable_name + "_"
-            + std::to_string(my_data->getCurrentTimestep()) + ".txt";
-        std::cout<<"outfile "<<std::endl;
-        std::ofstream out_file(output_name);*/
-
-
         auto timeStep = my_data->getCurrentTimestep();
 
         vtkNew<vtkCPDataDescription> dataDescription;
@@ -109,49 +118,29 @@ extern "C" {
         dataDescription->AddInput("input");
 
         // the last time step shuld always be output
-        if(data.getEndTimestep()){
+        if(my_data->getEndTimestep()){
               dataDescription->ForceOutputOn();
         }
 
-//here
-        if (processor->RequestDataDescription(dataDescription))
+
+        if (Processor->RequestDataDescription(dataDescription.GetPointer())!=0)
         {
-          vtkCPInputDataDescription* inputDataDescription =
-            dataDescription->GetInputDescriptionByName("input");
-          grid.UpdateField(time, inputDataDescription);
-          inputDataDescription->SetGrid(grid.GetVTKGrid());
-          if (!generateUnstructuredGrid)
-          {
-            int wholeExtent[6];
-            for (int i = 0; i < 3; i++)
-            {
-              wholeExtent[2 * i] = 0;
-              wholeExtent[2 * i + 1] = numPoints[i];
+            // Create an axis-aligned, uniform grid
+            vtkImageData* grid = vtkImageData::New();
+            grid->SetExtent(ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
+            dataDescription->GetInputDescriptionByName("input")->SetGrid(grid);
+            // For structured grids we need to specify the global data extents
+            dataDescription->GetInputDescriptionByName("input")->SetWholeExtent(ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
+            grid->Delete();
+            // Create a field associated with points
+            vtkDoubleArray* field_array = vtkDoubleArray::New();
+            field_array->SetName(variable_name);
+            field_array->SetArray(variable_data, grid->GetNumberOfPoints(), 0);
+            grid->GetPointData()->AddArray(field_array);
+            field_array->Delete();
+            Processor->CoProcess(dataDescription);
             }
-            inputDataDescription->SetWholeExtent(wholeExtent);
-          }
-          processor->CoProcess(dataDescription);
-        }
-      }
-
-
-        // Set highest possible precision, this way we are sure we are
-        out_file << std::setprecision(std::numeric_limits<long double>::digits10 + 1);
-
-        // ignoring ghost cells (ngz is number of ghost cells in z direction)
-        for (int z = ngz; z < nz + ngz; ++z) {
-            // ignoring ghost cells (ngy is number of ghost cells in y direction)
-            for (int y = ngy; y < ny + ngy; ++y) {
-                // ignoring ghost cells (ngx is number of ghost cells in x direction)
-                for (int x = ngx; x < nx + ngx; ++x) {
-                    const auto index = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
-                    out_file << variable_data[index] << "\n";
-                }
-            }
-
-        }
-
-
+            dataDescription->Delete();
 
 
     }
@@ -160,23 +149,20 @@ extern "C" {
         std::cout << "In make_parameters" << std::endl;
 
         return static_cast<void*>(new MyParameters());
+      }
 
-    }
 
     DLL_ADAPTOR_EXPORT void delete_parameters(void* parameters) {
         std::cout << "In delete_parameters" << std::endl;
-
-        PRINT_PARAM(parameters);
-
-
+    //    PRINT_PARAM(parameters);
         delete static_cast<MyParameters*>(parameters);
     }
 
     DLL_ADAPTOR_EXPORT bool needs_data_on_host(void* data, void* parameters) {
         std::cout << "in needs_data_on_host" << std::endl;
 
-        PRINT_PARAM(data);
-        PRINT_PARAM(parameters);
+    //    PRINT_PARAM(data);
+    //    PRINT_PARAM(parameters);
 
         return true;
 
@@ -188,11 +174,6 @@ extern "C" {
         std::cout << "In set_parameter" << std::endl;
 
         auto my_parameters = static_cast<MyParameters*>(parameters);
-
-        PRINT_PARAM(parameters);
-        PRINT_PARAM(key);
-        PRINT_PARAM(value);
-
         my_parameters->setParameter(key, value);
     }
 
@@ -220,7 +201,6 @@ extern "C" {
         PRINT_PARAM(timestep_number);
 
         auto my_data = static_cast<MyData*>(data);
-
         my_data->setCurrentTimestep(timestep_number);
 
     }
@@ -235,7 +215,8 @@ extern "C" {
         PRINT_PARAM(time);
         PRINT_PARAM(timestep_number);
 
-        data.setEndTimeStep(true)
+        auto my_data = static_cast<MyData*>(data);
+        if(false) my_data->setEndTimeStep(true);
 
     }
 

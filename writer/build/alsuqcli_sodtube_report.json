@@ -1,0 +1,157 @@
+{
+    "report": {
+        "software": "alsvinn https:\/\/github.com\/alsvinn",
+        "softwareVersion": "0.4.1",
+        "currentWorkingDirectory": "\/home\/ramona\/MasterthesisLOCAL\/coding\/alsvinn_insitu\/writer\/build",
+        "operatingSystem": "Linux: Linux 4.15.0-51-generic #55-Ubuntu SMP Wed May 15 14:27:21 UTC 2019 x86_64",
+        "username": "ramona",
+        "host": "Yoga",
+        "standardCLibrary": "GNU libc 2.27 stable",
+        "generatedAt": "20190617T105953",
+        "CPU": "Intel(R) Core(TM) i7-4500U CPU @ 1.80GHz",
+        "revision": "6a3064358bd781dec88eec33d8f3021bb6272e60",
+        "versionControlStatus": "DIRTY",
+        "buildType": "Release",
+        "cxxFlags": "",
+        "cxxFlagsDebug": "-g",
+        "cxxFlagsRelease": "-O3 -DNDEBUG",
+        "cxxFlagsMinSizeRel": "-Os -DNDEBUG",
+        "cxxFlagsRelWithDebInfo": "-O2 -g -DNDEBUG",
+        "cudaFlags": "",
+        "cudaVersion": "",
+        "cxxCompiler": "GNU 7.4.0",
+        "cudaCompiler": " ",
+        "boost": {
+            "BOOST_VERSION": "106501",
+            "BOOST_LIB_VERSION": "1_65_1",
+            "BOOST_PLATFORM": "linux",
+            "BOOST_PLATFORM_CONFIG": "boost\/config\/platform\/linux.hpp",
+            "BOOST_COMPILER": "GNU C++ version 7.4.0",
+            "BOOST_LIBSTDCXX_VERSION": "70400",
+            "C++11": "true",
+            "BOOST_STDLIB": "GNU libstdc++ version 20181206",
+            "BOOST_STDLIB_CONFIG": "boost\/config\/stdlib\/libstdcpp3.hpp"
+        },
+        "floatingPointPrecisionDescription": "double (double precision, 64 bits)",
+        "floatingPointType": "double",
+        "floatingPointMax": "1.79769e+308",
+        "floatingPointMin": "2.22507e-308",
+        "floatingPointEpsilon": "2.22045e-16",
+        "mpiEnabled": "true",
+        "mpiProcesses": "1",
+        "mpiVersion": "Open MPI v2.1.1, package: Open MPI buildd@lcy01-amd64-009 Distribution, ident: 2.1.1, repo rev: v2.1.0-100-ga2fdb5b, May 10, 2017",
+        "ompEnabled": "true",
+        "ompThreads": "4",
+        "timings": {
+            "allTimedEvents": {
+                "totalTime": "13.441075989",
+                "percentOfProgramTotalTime": "101",
+                "hasIndividualTimeData": "false",
+                "alsvinn": {
+                    "totalTime": "13.441075989",
+                    "percentOfProgramTotalTime": "101",
+                    "hasIndividualTimeData": "true",
+                    "fvm": {
+                        "totalTime": "4.6143552470000051",
+                        "percentOfProgramTotalTime": "35",
+                        "hasIndividualTimeData": "false",
+                        "init": {
+                            "totalTime": "0.32805770099999998",
+                            "percentOfProgramTotalTime": "3",
+                            "hasIndividualTimeData": "false",
+                            "python": {
+                                "totalTime": "0.32805770099999998",
+                                "percentOfProgramTotalTime": "3",
+                                "hasIndividualTimeData": "true",
+                                "evaluation": {
+                                    "totalTime": "0.001215917",
+                                    "percentOfProgramTotalTime": "1",
+                                    "hasIndividualTimeData": "true"
+                                },
+                                "extract": {
+                                    "totalTime": "0.00042652099999999986",
+                                    "percentOfProgramTotalTime": "1",
+                                    "hasIndividualTimeData": "true"
+                                }
+                            }
+                        },
+                        "io": {
+                            "totalTime": "0.056191609000000003",
+                            "percentOfProgramTotalTime": "1",
+                            "hasIndividualTimeData": "false",
+                            "netcdf": {
+                                "totalTime": "0.056191609000000003",
+                                "percentOfProgramTotalTime": "1",
+                                "hasIndividualTimeData": "true"
+                            }
+                        },
+                        "numflux": {
+                            "totalTime": "4.2277891320000043",
+                            "percentOfProgramTotalTime": "32",
+                            "hasIndividualTimeData": "true"
+                        },
+                        "reconstruction": {
+                            "totalTime": "0.0023168049999999999",
+                            "percentOfProgramTotalTime": "1",
+                            "hasIndividualTimeData": "true"
+                        }
+                    },
+                    "mpi": {
+                        "totalTime": "0.1879216040000001",
+                        "percentOfProgramTotalTime": "2",
+                        "hasIndividualTimeData": "false",
+                        "exchange": {
+                            "totalTime": "0.1879216040000001",
+                            "percentOfProgramTotalTime": "2",
+                            "hasIndividualTimeData": "true",
+                            "wait": {
+                                "totalTime": "0.018319189999999999",
+                                "percentOfProgramTotalTime": "1",
+                                "hasIndividualTimeData": "true"
+                            }
+                        }
+                    },
+                    "uq": {
+                        "totalTime": "0.31612236599999999",
+                        "percentOfProgramTotalTime": "3",
+                        "hasIndividualTimeData": "false",
+                        "generate": {
+                            "totalTime": "6.1670000000000004e-06",
+                            "percentOfProgramTotalTime": "1",
+                            "hasIndividualTimeData": "true"
+                        },
+                        "init": {
+                            "totalTime": "0.00048118899999999998",
+                            "percentOfProgramTotalTime": "1",
+                            "hasIndividualTimeData": "true"
+                        },
+                        "stats": {
+                            "totalTime": "0.31563500999999999",
+                            "percentOfProgramTotalTime": "3",
+                            "hasIndividualTimeData": "false",
+                            "combine": {
+                                "totalTime": "0.137319782",
+                                "percentOfProgramTotalTime": "2",
+                                "hasIndividualTimeData": "true"
+                            },
+                            "compute": {
+                                "totalTime": "0.17831522799999999",
+                                "percentOfProgramTotalTime": "2",
+                                "hasIndividualTimeData": "true"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "executable": "alsuqcli",
+        "name": "sodtube",
+        "endTime": "20190617T105953",
+        "cpuDuration": "10394",
+        "cpuDurationHuman": "00:00:10",
+        "wallTime": "13000",
+        "wallTimeHuman": "00:00:13",
+        "timesteps": "81",
+        "command": "\/home\/ramona\/MasterthesisLOCAL\/coding\/alsvinn\/build\/alsuqcli\/alsuqcli ..\/..\/examples\/1d\/sodshocktube\/sodshocktube.xml "
+    }
+}

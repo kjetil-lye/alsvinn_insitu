@@ -36,10 +36,10 @@
     </diffusion>
   <writer>
     <type>dll</type>
-    <library>writer/libdll_writer.so</library>
+    <library>adaptor/libdll_adaptor.so</library>
     <create_function>create</create_function>
     <delete_function>delete_data</delete_function>
-    <write_function>write_data</write_function>
+    <write_function>CatalystCoProcess</write_function>
     <make_parameters_function>make_parameters</make_parameters_function>
     <delete_parameters_function>delete_parameters</delete_parameters_function>
     <needs_data_on_host_function>needs_data_on_host</needs_data_on_host_function>
@@ -47,7 +47,7 @@
     <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
     <new_timestep_function>new_timestep</new_timestep_function>
     <end_timestep_function>end_timestep</end_timestep_function>
-        
+
     <basename>sodshocktube</basename>
     <numberOfSaves>10</numberOfSaves>
   </writer>

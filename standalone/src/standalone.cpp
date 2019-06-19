@@ -1,6 +1,5 @@
 #include <iostream>
-//#include <dll_adaptor.hpp>
-#include <dll_writer.hpp>
+#include <dll_adaptor.hpp>
 #include <netcdf.h>
 #include <sstream>
 #include <exception>
@@ -62,9 +61,6 @@ std::vector<DataField> read_file(const std::string& file_name) {
 
         field.name = name;
 
-
-
-
         int number_of_dimensions = 0;
 
         NETCDF_SAFE_CALL(nc_inq_varndims(file, varid, &number_of_dimensions));
@@ -108,59 +104,71 @@ std::vector<DataField> read_file(const std::string& file_name) {
 
 
 int main(int argc, char** argv) {
-    if (argc != 2) {
-        std::cout << "Usage: \n\t" << argv[0] << " <filename.nc>\n";
+    if (argc < 2) {
+        std::cout << "Usage: \n\t" << argv[0] << " <filename.nc>  <pipelinescript.py> \n";
         return EXIT_FAILURE;
-
     }
 
-    MPI_Init(NULL, NULL);
 
+    MPI_Init(NULL, NULL);
 
     const std::string file_name = argv[1];
 
     auto fields = read_file(file_name);
 
+    std::cout << "0" << std::endl;
 //initialized paramaters as a "MyParameters" object,  writer
     auto parameters = make_parameters();
+
+
+    std::cout << "00" << std::endl;
     //create returns a myData object
     auto data = create("standalone", "v0.0.1", parameters);
-
+std::cout << "000" << std::endl;
   //setup communictaion /(defines mpiComm=MPI_COMM_WORLD (communication between all processes) in MyParameters)
     set_mpi_comm(data, parameters, MPI_COMM_WORLD);
+std::cout << "0000" << std::endl;
+set_parameter(parameters, "basename", "standalone_base");
+//set_parameter(parameters, "pipelineScript", "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/gridwriter.py");
 
-    set_parameter(parameters, "basename", "standalone_base");
+for ( int timeStep = 0; timeStep < 4; timeStep++)
+{
+  // use a time step length of 0.1
+  double time = timeStep * 2.5;
 
-//sets timestep 0 in mydata
-    new_timestep(data, parameters, 0.0, 0);
+  new_timestep(data, parameters,time, timeStep);
+  std::cout << timeStep << std::endl;
 
-    for (auto& field : fields) {
+      for (auto& field : fields) {
+          std::cout<<field.name<<std::endl;
+    //    std::cout<<"infields"<<std::endl;
+          CatalystCoProcess(data,
+              parameters,
+              time,
+              field.name.c_str(),
+              field.data.data(),
+              field.nx,
+              field.ny,
+              field.nz,
+              0,
+              0,
+              0,
+              field.ax,
+              field.ay,
+              field.az,
+              field.bx,
+              field.by,
+              field.bz,
+              -1);
 
-        write_data(data,
-            parameters,
-            0.0,
-            field.name.c_str(),
-            field.data.data(),
-            field.nx,
-            field.ny,
-            field.nz,
-            0,
-            0,
-            0,
-            field.ax,
-            field.ay,
-            field.az,
-            field.bx,
-            field.by,
-            field.bz,
-            -1);
+      }
 
-    }
+      end_timestep(data, parameters, time, timeStep);
+}
 
-    end_timestep(data, parameters, 0.0, 0);
-    delete_data(data);
+
     delete_parameters(parameters);
-
+    delete_data(data);
     MPI_Finalize();
 
 

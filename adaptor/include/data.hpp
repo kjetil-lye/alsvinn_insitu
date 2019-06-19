@@ -5,11 +5,11 @@ public:
     int getCurrentTimestep() const;
     bool getEndTimestep() const;
     void setCurrentTimestep(int value);
-    void setEndTimestep(bool value);
+    void setEndTimeStep(int value);
 
 private:
     int currentTimestep = 0;
-    bool endTimestep= false;
+    int endTimestep= -1;
 };
 
 inline int MyData::getCurrentTimestep() const
@@ -18,7 +18,7 @@ inline int MyData::getCurrentTimestep() const
 }
 inline bool MyData::getEndTimestep() const
 {
-    return endTimestep;
+    return endTimestep==currentTimestep;
 }
 
 inline void MyData::setCurrentTimestep(int value)
@@ -26,7 +26,7 @@ inline void MyData::setCurrentTimestep(int value)
     currentTimestep = value;
 }
 
-inline void MyData::setEndTimestep(bool value)
+inline void MyData::setEndTimeStep(int value)
 {
     endTimestep = value;
 }

@@ -1,3 +1,6 @@
+#ifndef DLLADAPTOR_HEADER
+#define DLLADAPTOR_HEADER
+
 #pragma once
 #include <mpi.h>
 #include "dll_adaptor_exports.h"
@@ -13,8 +16,8 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
 DLL_ADAPTOR_EXPORT void delete_data(void* data);
 
 //"Catalyst CoProcess"
-DLL_ADAPTOR_EXPORT void write_data(void* data, void* parameters, double time,
-    const char* variable_name, const double* variable_data, int nx, int ny, int nz,
+DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double time,
+    const char* variable_name,  double* variable_data, int nx, int ny, int nz,
     int ngx, int ngy, int ngz, double ax, double ay, double az, double bx,
     double by, double bz, int gpu_number );
 
@@ -38,4 +41,7 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
     int timestep_number);
 #ifdef __cplusplus
 }
+#endif
+
+
 #endif

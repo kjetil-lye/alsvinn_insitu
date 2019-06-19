@@ -3,7 +3,7 @@ from paraview.simple import *
 from paraview import coprocessing
 
 # the frequency to output everything
-outputfrequency = 2
+outputfrequency = 1
 
 #--------------------------------------------------------------
 # Code generated from cpstate.py to create the CoProcessor.

@@ -128,12 +128,12 @@ vtkImageData* VTKGrid = NULL;
           if (VTKGrid == NULL)
           {
             VTKGrid = vtkImageData::New();
-            VTKGrid->SetExtent(ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
+            VTKGrid->SetExtent(0, nx, 0,0,0,0); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
           }
 
             dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
             // For structured grids we need to specify the global data extents
-            dataDescription->GetInputDescriptionByName("input")->SetWholeExtent(ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
+            dataDescription->GetInputDescriptionByName("input")->SetWholeExtent(0, nx,0,0,0,0); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
 
             // Create a field associated with points
             vtkDoubleArray* field_array = vtkDoubleArray::New();

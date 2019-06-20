@@ -25,10 +25,7 @@ vtkImageData* VTKGrid = NULL;
     DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
         const char* simulator_version, void* parameters) {
 
-        std::cout << "In create" << std::endl;
-        /*auto my_parameters = static_cast<MyParameters*>(parameters);
-        auto script_loc = my_parameters->getParameter("pipelineScript");
-        const char *script_char = script_loc.c_str();*/
+
 
         // Initialize catalyst, set processes
         if (Processor == NULL)
@@ -41,42 +38,42 @@ vtkImageData* VTKGrid = NULL;
           Processor->RemoveAllPipelines();
         }
 
-        std::string script_loc = "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/gridwriter.py";
-        const char *script_char = "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/gridwriter.py";
+        //default script
+        const char *script_default = "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/gridwriter.py";
+        auto my_parameters = static_cast<MyParameters*>(parameters);
+        const std::string script_str = my_parameters->getParameter("pipelineScript");
+        const char *script_loc = script_str.c_str();
 
-        std::cout<< "Python script : "<< script_loc<<std::endl;
-        std::cout<< "Python script : "<< script_char<<std::endl;
-
-
-       if(script_loc !="")
+        vtkNew<vtkCPPythonScriptPipeline> pipeline;
+       if(script_str =="none")
         {
-          vtkNew<vtkCPPythonScriptPipeline> pipeline;
-
-          pipeline->Initialize(script_char);
-
-          Processor->AddPipeline(pipeline.GetPointer());
-
-
+            pipeline->Initialize(script_default);
+            std::cout<<"pipeline script: "<< script_default<<std::endl;
         }
+        else{
+            pipeline->Initialize(script_loc);
+            std::cout<<"pipeline script: "<< script_loc<<std::endl;
+        }
+        Processor->AddPipeline(pipeline.GetPointer());
 
-        //@Todo: should be able to load multiple script for pipeline:
-        /*
-        scripts are passed in as command line arguments
+
+  /* @TOO DO WE NEED MULTIPLE SCRIPTS?
         for(int i=0;i<numScripts;i++)
         {
-        vtkCPPythonScriptPipeline* pipeline =
-        vtkCPPythonScriptPipeline::New();
-        pipeline->Initialize(scripts[i]);
-        Processor->AddPipeline(pipeline);
-        pipeline->Delete();
+            vtkCPPythonScriptPipeline* pipeline =
+            vtkCPPythonScriptPipeline::New();
+            pipeline->Initialize(scripts[i]);
+            Processor->AddPipeline(pipeline);
+            pipeline->Delete();
         }
-        */
+*/
 
-        PRINT_PARAM(simulator_name);
-        PRINT_PARAM(simulator_version);
-        PRINT_PARAM(parameters);
+        const int endTime = std::stoi(my_parameters->getParameter("endTime"));
+        MyData *my_data = new MyData;
+        my_data-> setEndTimeStep(endTime);
 
-        return static_cast<void*>(new MyData);
+        return   static_cast<void*>(my_data);
+
     }
 
 
@@ -96,16 +93,14 @@ vtkImageData* VTKGrid = NULL;
     }
 
 /**
-* CoProcesses
-*
-* @param nx, ny, nz are number of ghost cells in respective direction
+* CatalystCoProcess
+* @param nx, ny, nz are number of cells in respective direction
+* @param ngx, ngy, ngz are number of ghost cells in respective direction
 */
     DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double time,
         const char* variable_name,  double* variable_data, int nx, int ny, int nz,
         int ngx, int ngy, int ngz, double ax, double ay, double az, double bx,
         double by, double bz, int gpu_number ) {
-
-        std::cout << "================ CatalystCoProcess" << std::endl;
 
         auto my_data = static_cast<MyData*>(data);
         auto my_parameters = static_cast<MyParameters*>(parameters);
@@ -116,24 +111,22 @@ vtkImageData* VTKGrid = NULL;
         dataDescription->AddInput("input");
 
         // the last time step shuld always be output
-        if(my_data->getEndTimestep()){
+        /*if(my_data->getEndTimestep()){
               dataDescription->ForceOutputOn();
               std::cout << "force" << std::endl;
-        }
+        }*/
 
-
-
-        if (Processor->RequestDataDescription(dataDescription)!=0)
+        if (my_data->getNewTimestep() || my_data->getEndTimestep() )//since we take the number of outputs from the alsvinn simulation and not form the PythonScriptProcessor ->RequestDataDescription(dataDescription)!=0)
         {
           if (VTKGrid == NULL)
           {
             VTKGrid = vtkImageData::New();
-            VTKGrid->SetExtent(0, nx, 0,0,0,0); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
+            VTKGrid->SetExtent(0, nx-1+ngx, 0, ny-1+ngy, 0,nz-1+ngz); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
           }
 
             dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
             // For structured grids we need to specify the global data extents
-            dataDescription->GetInputDescriptionByName("input")->SetWholeExtent(0, nx,0,0,0,0); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
+            dataDescription->GetInputDescriptionByName("input")->SetWholeExtent(0, nx-1+ngx, 0, ny-1+ngy, 0,nz-1+ngz); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
 
             // Create a field associated with points
             vtkDoubleArray* field_array = vtkDoubleArray::New();
@@ -144,20 +137,18 @@ vtkImageData* VTKGrid = NULL;
             Processor->CoProcess(dataDescription);
             }
             dataDescription->Delete();
-  std::cout << "In ccp 5" << std::endl;
+            my_data->setNewTimestep(false);
 
     }
 
     DLL_ADAPTOR_EXPORT void* make_parameters() {
         std::cout << "In make_parameters" << std::endl;
-
         return static_cast<void*>(new MyParameters());
       }
 
 
     DLL_ADAPTOR_EXPORT void delete_parameters(void* parameters) {
         std::cout << "In delete_parameters" << std::endl;
-    //    PRINT_PARAM(parameters);
         delete static_cast<MyParameters*>(parameters);
     }
 
@@ -173,9 +164,7 @@ vtkImageData* VTKGrid = NULL;
 
     DLL_ADAPTOR_EXPORT void set_parameter(void* parameters, const char* key,
         const char* value) {
-
-        std::cout << "In set_parameter" << std::endl;
-
+          std::cout<<key <<" : "<<value <<std::endl;
         auto my_parameters = static_cast<MyParameters*>(parameters);
         my_parameters->setParameter(key, value);
     }
@@ -196,26 +185,17 @@ vtkImageData* VTKGrid = NULL;
 
     DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
         int timestep_number) {
-        std::cout << "in new_timestep" << std::endl;
-
-        PRINT_PARAM(data);
-        PRINT_PARAM(parameters);
         PRINT_PARAM(time);
-        PRINT_PARAM(timestep_number);
 
         auto my_data = static_cast<MyData*>(data);
         my_data->setCurrentTimestep(timestep_number);
+        my_data->setNewTimestep(true);
 
     }
 
 
     DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
         int timestep_number) {
-        std::cout << "in end_timestep" << std::endl;
-
-        PRINT_PARAM(data);
-        PRINT_PARAM(parameters);
-        PRINT_PARAM(time);
         PRINT_PARAM(timestep_number);
 
     //    auto my_data = static_cast<MyData*>(data);

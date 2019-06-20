@@ -13,16 +13,14 @@ public:
     }
 
     std::string getParameter(const std::string& key) const {
-        std::string out="";
-    try{
-        out =  parameters.at(key);
+      std::string out ="none";
+      if ( parameters.find(key) == parameters.end() ) {
+        std::cerr<<"warning: no pipeline script"<<std::endl;
+        }else{
+          out= parameters.at(key);
         }
-      catch(const std::exception& e) { // caught by reference to base
-        std::cout << "ERROR:  a standard exception was caught, with message '"
-                  << e.what() << "'\n";
-        std::cout<<"Probably no pipeline script"<<std::endl;
-      }
-      return out;
+
+        return out;
     }
 
     void setMPIComm(MPI_Comm comm) {

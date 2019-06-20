@@ -11,7 +11,7 @@
   </grid>
   <boundary>neumann</boundary>
   <flux>hll3</flux>
-  <endTime>1.3</endTime>
+  <endTime>4</endTime>
   <equation>euler1</equation>
   <reconstruction>none</reconstruction>
   <cfl>0.45</cfl>
@@ -47,9 +47,10 @@
     <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
     <new_timestep_function>new_timestep</new_timestep_function>
     <end_timestep_function>end_timestep</end_timestep_function>
-
+    <endTime>4</endTime>
     <basename>sodshocktube</basename>
-    <numberOfSaves>10</numberOfSaves>
+    <numberOfSaves>20</numberOfSaves>
+    <cfl>0.45</cfl>
   </writer>
 </fvm>
 <uq>

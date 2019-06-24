@@ -15,10 +15,14 @@ public:
     std::string getParameter(const std::string& key) const {
       std::string out ="none";
       if ( parameters.find(key) == parameters.end() ) {
-        std::cerr<<"warning: no pipeline script"<<std::endl;
+        std::cerr<<"warning: missing parameter: "<<key <<std::endl;
         }else{
-          out= parameters.at(key);
+          try{
+              out= parameters.at(key);
+          }catch(const std::exception& e){
+            std::cerr<<"in get_parameter: caught exception: "<< e.what()<<std::endl;
         }
+      }
 
         return out;
     }

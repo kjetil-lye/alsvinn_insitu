@@ -61,8 +61,7 @@ std::vector<DataField> read_file(const std::string& file_name) {
 
         field.name = name;
 
-        int number_of_dimensions = 2;
-
+        int number_of_dimensions = 1;
         NETCDF_SAFE_CALL(nc_inq_varndims(file, varid, &number_of_dimensions));
 
         std::vector<int> dimension_ids(number_of_dimensions, 0);
@@ -77,8 +76,8 @@ std::vector<DataField> read_file(const std::string& file_name) {
 
         size_t total_size = 1;
 
-        for (size_t length : v_len) {
-            total_size *= length;
+        for (size_t l : v_len) {
+            total_size *= l;
         }
 
         field.data.resize(total_size, 0.0);
@@ -108,17 +107,21 @@ int main(int argc, char** argv) {
         std::cout << "Usage: \n\t" << argv[0] << " <filename.nc>  <pipelinescript.py> \n";
         return EXIT_FAILURE;
     }
+  const int endTime = 4;
+  std::string stmp = std::to_string(endTime);
+  char const *end_time = stmp.c_str();
 
 
     MPI_Init(NULL, NULL);
-
     const std::string file_name = argv[1];
-
     auto fields = read_file(file_name);
 
-    std::cout << "0" << std::endl;
+    std::cout << "read file" << std::endl;
 //initialized paramaters as a "MyParameters" object,  writer
     auto parameters = make_parameters();
+    set_parameter(parameters, "basename", "standalone_base");
+    set_parameter(parameters, "pipelineScript", "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/gridwriter.py");
+    set_parameter(parameters, "endTime", end_time);
 
 
     std::cout << "0bgsfffffffffffffffffffffffffffffff0" << std::endl;
@@ -126,22 +129,21 @@ int main(int argc, char** argv) {
     auto data = create("standalone", "v0.0.1", parameters);
 std::cout << "000" << std::endl;
   //setup communictaion /(defines mpiComm=MPI_COMM_WORLD (communication between all processes) in MyParameters)
-    set_mpi_comm(data, parameters, MPI_COMM_WORLD);
+set_mpi_comm(data, parameters, MPI_COMM_WORLD);
 std::cout << "0000" << std::endl;
-set_parameter(parameters, "basename", "standalone_base");
-//set_parameter(parameters, "pipelineScript", "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/gridwriter.py");
 
-for ( int timeStep = 0; timeStep < 4; timeStep++)
+
+for ( int timeStep = 0; timeStep < endTime; timeStep++)
 {
   // use a time step length of 0.1
   double time = timeStep * 2.5;
 
   new_timestep(data, parameters,time, timeStep);
   std::cout << timeStep << std::endl;
-  std::cout << fields.size() << std::endl;
+  std::cout << "size of fields" << fields.size() << std::endl;
 
       for (auto& field : fields) {
-          std::cout<<field.name<<std::endl;
+          std::cout<<"name of field: " <<field.name<<std::endl;
     //    std::cout<<"infields"<<std::endl;
           CatalystCoProcess(data,
               parameters,

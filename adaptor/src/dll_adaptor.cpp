@@ -60,7 +60,7 @@ vtkImageData* VTKGrid = NULL;
   /* @TOO DO WE NEED MULTIPLE SCRIPTS?
         for(int i=0;i<numScripts;i++)
         {
-            vtkCPPythonScriptPipeline* pipeline =
+            vtkCPPythonScriptPipeline* pipeline =d
             vtkCPPythonScriptPipeline::New();
             pipeline->Initialize(scripts[i]);
             Processor->AddPipeline(pipeline);
@@ -105,10 +105,13 @@ vtkImageData* VTKGrid = NULL;
         auto my_data = static_cast<MyData*>(data);
         auto my_parameters = static_cast<MyParameters*>(parameters);
         auto timeStep = my_data->getCurrentTimestep();
+        const std::string description_namestr = my_parameters->getParameter("basename");
+        const char *description_name = description_namestr.c_str();
+
 
         vtkCPDataDescription* dataDescription = vtkCPDataDescription::New();
         dataDescription->SetTimeData(time, timeStep);
-        dataDescription->AddInput("input");
+        dataDescription->AddInput(description_name);
 
         // the last time step shuld always be output
         /*if(my_data->getEndTimestep()){
@@ -118,24 +121,54 @@ vtkImageData* VTKGrid = NULL;
 
         if (my_data->getNewTimestep() || my_data->getEndTimestep() )//since we take the number of outputs from the alsvinn simulation and not form the PythonScriptProcessor ->RequestDataDescription(dataDescription)!=0)
         {
+          int extend[6]  = {0, nx+ngx-1, 0, ny+ngy-1, 0,nz+ngz-1 };
+
+          for (size_t i = 0; i < 6; i++)
+          		std::cout << extend[i] << ' ';
+
           if (VTKGrid == NULL)
           {
             VTKGrid = vtkImageData::New();
-            VTKGrid->SetExtent(0, nx-1+ngx, 0, ny-1+ngy, 0,nz-1+ngz); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
+            VTKGrid->SetExtent(extend); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
           }
 
-            dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
-            // For structured grids we need to specify the global data extents
-            dataDescription->GetInputDescriptionByName("input")->SetWholeExtent(0, nx-1+ngx, 0, ny-1+ngy, 0,nz-1+ngz); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
 
-            // Create a field associated with points
+            dataDescription->GetInputDescriptionByName(description_name)->SetGrid(VTKGrid);
+            // For structured grids we need to specify the global data extents
+            dataDescription->GetInputDescriptionByName(description_name)->SetWholeExtent(extend); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
+
             vtkDoubleArray* field_array = vtkDoubleArray::New();
             field_array->SetName(variable_name);
             field_array->SetArray(variable_data, VTKGrid->GetNumberOfPoints(), 1);
+
+
+        /*    const int maxIndex = (nz+ngz-1)*(nx+2*ngx)*(ny+2*ngy)+(ny+ngy-1)*(nx*2*ngx)+(nx+ngx-1); //nx*ny*nz
+            // Create a field associated with points
+            vtkDoubleArray* field_array = vtkDoubleArray::New();
+            field_array->SetNumberOfComponents(1);
+            field_array->SetNumberOfTuples(maxIndex);
+            field_array->SetName(variable_name);
+
+            for (int z = ngz; z < nz + ngz; ++z) {
+                // ignoring ghost cells (ngy is number of ghost cells in y direction)
+                for (int y = ngy; y < ny + ngy; ++y) {
+                    // ignoring ghost cells (ngx is number of ghost cells in x direction)
+                    for (int x = ngx; x < nx + ngx; ++x) {
+                        const auto index = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
+
+
+                        field_array.SetValue(index, variable_data[index]);
+                    }
+                }
+
+            }
+*/
+
+
             VTKGrid->GetPointData()->AddArray(field_array);
             field_array->Delete();
             Processor->CoProcess(dataDescription);
-            }
+          }
             dataDescription->Delete();
             my_data->setNewTimestep(false);
 
@@ -154,12 +187,7 @@ vtkImageData* VTKGrid = NULL;
 
     DLL_ADAPTOR_EXPORT bool needs_data_on_host(void* data, void* parameters) {
         std::cout << "in needs_data_on_host" << std::endl;
-
-    //    PRINT_PARAM(data);
-    //    PRINT_PARAM(parameters);
-
         return true;
-
     }
 
     DLL_ADAPTOR_EXPORT void set_parameter(void* parameters, const char* key,
@@ -197,10 +225,6 @@ vtkImageData* VTKGrid = NULL;
     DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
         int timestep_number) {
         PRINT_PARAM(timestep_number);
-
-    //    auto my_data = static_cast<MyData*>(data);
-    //    if(false) my_data->setEndTimeStep(true);
-
     }
 
 }//extern c

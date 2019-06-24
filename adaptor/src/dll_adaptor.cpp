@@ -108,23 +108,32 @@ vtkImageData* VTKGrid = NULL;
         const std::string description_namestr = my_parameters->getParameter("basename");
         const char *description_name = description_namestr.c_str();
 
-
         vtkCPDataDescription* dataDescription = vtkCPDataDescription::New();
         dataDescription->SetTimeData(time, timeStep);
-        dataDescription->AddInput(description_name);
+        dataDescription->AddInput("input");
 
         // the last time step shuld always be output
-        /*if(my_data->getEndTimestep()){
+        if(my_data->getEndTimestep()){
               dataDescription->ForceOutputOn();
               std::cout << "force" << std::endl;
-        }*/
+        }
+        std::cout << "description_name " <<description_name<< std::endl;
+        std::cout << "variable_name: " <<variable_name<< std::endl;
 
-        if (my_data->getNewTimestep() || my_data->getEndTimestep() )//since we take the number of outputs from the alsvinn simulation and not form the PythonScriptProcessor ->RequestDataDescription(dataDescription)!=0)
+        //since we take the number of outputs from the alsvinn simulation and not form the PythonScriptProcessor ->RequestDataDescription(dataDescription)!=0)
+        //either we are looking at new variable or new timestep or the last time step
+    //    if (Processor ->RequestDataDescription(dataDescription)!=0 )
+      if(my_data->getNewVariable(variable_name) || my_data->getNewTimestep() || my_data->getEndTimestep() )
         {
-          int extend[6]  = {0, nx+ngx-1, 0, ny+ngy-1, 0,nz+ngz-1 };
-
+      //   int extend[6]  = {0, ngx+nx, 0, ngy+ny, 0, 0}; //0, nx, 0, ny, 0,0 };
+        int extend[6]  = {0,nx,0,ny,0,nz};//{ngx, nx+ngx, ngy, ny+ngy, ngz, 0}; //nz+ngz };
           for (size_t i = 0; i < 6; i++)
           		std::cout << extend[i] << ' ';
+          std::cout<<std::endl;
+
+
+         std::cout <<"size of vairable data " << sizeof(variable_data)/sizeof(variable_data[0]) <<std::endl;
+
 
           if (VTKGrid == NULL)
           {
@@ -133,45 +142,50 @@ vtkImageData* VTKGrid = NULL;
           }
 
 
-            dataDescription->GetInputDescriptionByName(description_name)->SetGrid(VTKGrid);
+            dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
             // For structured grids we need to specify the global data extents
-            dataDescription->GetInputDescriptionByName(description_name)->SetWholeExtent(extend); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
+            dataDescription->GetInputDescriptionByName("input")->SetWholeExtent(extend); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
 
-            vtkDoubleArray* field_array = vtkDoubleArray::New();
-            field_array->SetName(variable_name);
-            field_array->SetArray(variable_data, VTKGrid->GetNumberOfPoints(), 1);
-
-
-        /*    const int maxIndex = (nz+ngz-1)*(nx+2*ngx)*(ny+2*ngy)+(ny+ngy-1)*(nx*2*ngx)+(nx+ngx-1); //nx*ny*nz
+    /*     const int maxIndex = nx*ny*nz; // (nz+ngz-1)*(nx+2*ngx)*(ny+2*ngy)+(ny+ngy-1)*(nx*2*ngx)+(nx+ngx-1); //nx*ny*nz
             // Create a field associated with points
             vtkDoubleArray* field_array = vtkDoubleArray::New();
+
             field_array->SetNumberOfComponents(1);
             field_array->SetNumberOfTuples(maxIndex);
             field_array->SetName(variable_name);
-
+              std::cout << "h " <<3<< std::endl;
+            int index = 0;
             for (int z = ngz; z < nz + ngz; ++z) {
                 // ignoring ghost cells (ngy is number of ghost cells in y direction)
                 for (int y = ngy; y < ny + ngy; ++y) {
                     // ignoring ghost cells (ngx is number of ghost cells in x direction)
                     for (int x = ngx; x < nx + ngx; ++x) {
-                        const auto index = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
-
-
-                        field_array.SetValue(index, variable_data[index]);
+                         index = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
+                        field_array->SetValue(index, variable_data[index]);
+                        std::cout << "z " <<z<< std::endl;
+                        std::cout << "x " <<x<< std::endl;
+                        std::cout << "y " <<y<< std::endl;
+                        std::cout << "index " <<index<< std::endl;
+                          std::cout << "maxindex " <<maxIndex<< " " <<127*127 <<std::endl;
                     }
                 }
 
-            }
-*/
+            }*/
 
 
-            VTKGrid->GetPointData()->AddArray(field_array);
-            field_array->Delete();
+
+
+              vtkDoubleArray* field_array = vtkDoubleArray::New();
+              field_array->SetName(variable_name);
+              field_array->SetArray(variable_data, VTKGrid->GetNumberOfPoints(), 1);
+              VTKGrid->GetPointData()->AddArray(field_array);
+              field_array->Delete();
+
             Processor->CoProcess(dataDescription);
           }
+
             dataDescription->Delete();
             my_data->setNewTimestep(false);
-
     }
 
     DLL_ADAPTOR_EXPORT void* make_parameters() {
@@ -186,8 +200,7 @@ vtkImageData* VTKGrid = NULL;
     }
 
     DLL_ADAPTOR_EXPORT bool needs_data_on_host(void* data, void* parameters) {
-        std::cout << "in needs_data_on_host" << std::endl;
-        return true;
+       return true;
     }
 
     DLL_ADAPTOR_EXPORT void set_parameter(void* parameters, const char* key,

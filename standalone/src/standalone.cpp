@@ -19,10 +19,11 @@ struct DataField {
 
 #define NETCDF_SAFE_CALL(x) {\
     auto error = x; \
-    if (error) { \
+    if (error!=NC_NOERR) { \
         std::stringstream error_message; \
         error_message << "NetCDF error in call to\n\t" << #x << "\n\nError code: " << error \
         << "\n\nError message: " << nc_strerror(error);\
+        throw std::runtime_error(error_message.str());\
     } \
 }
 
@@ -32,18 +33,20 @@ std::vector<DataField> read_file(const std::string& file_name) {
 
     int file;
 
+    std::cout << file_name << std::endl;
     NETCDF_SAFE_CALL(nc_open(file_name.c_str(), NC_NOWRITE, &file));
 
     int  number_of_variables;
     NETCDF_SAFE_CALL(nc_inq_nvars(file, &number_of_variables));
 
-    std::vector<int> variable_ids(number_of_variables, 0);
+    std::vector<int> variable_ids(number_of_variables, -42);
 
     NETCDF_SAFE_CALL(nc_inq_varids(file, &number_of_variables,
             variable_ids.data()));
 
 
     for (int varid : variable_ids) {
+      //std::cout << "varid " << varid << std::endl;
         std::vector<char> name_vector(NC_MAX_NAME, 0);
 
         NETCDF_SAFE_CALL(nc_inq_varname(file, varid, name_vector.data()));
@@ -107,7 +110,7 @@ int main(int argc, char** argv) {
         std::cout << "Usage: \n\t" << argv[0] << " <filename.nc>  <pipelinescript.py> \n";
         return EXIT_FAILURE;
     }
-  const int endTime = 4;
+  const int endTime = 2;
   std::string stmp = std::to_string(endTime);
   char const *end_time = stmp.c_str();
 
@@ -123,14 +126,12 @@ int main(int argc, char** argv) {
     set_parameter(parameters, "pipelineScript", "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/gridwriter.py");
     set_parameter(parameters, "endTime", end_time);
 
-
-    std::cout << "0bgsfffffffffffffffffffffffffffffff0" << std::endl;
     //create returns a myData object
     auto data = create("standalone", "v0.0.1", parameters);
-std::cout << "000" << std::endl;
+
   //setup communictaion /(defines mpiComm=MPI_COMM_WORLD (communication between all processes) in MyParameters)
 set_mpi_comm(data, parameters, MPI_COMM_WORLD);
-std::cout << "0000" << std::endl;
+
 
 
 for ( int timeStep = 0; timeStep < endTime; timeStep++)
@@ -140,7 +141,7 @@ for ( int timeStep = 0; timeStep < endTime; timeStep++)
 
   new_timestep(data, parameters,time, timeStep);
   std::cout << timeStep << std::endl;
-  std::cout << "size of fields" << fields.size() << std::endl;
+  std::cout << "size of fields: " << fields.size() << std::endl;
 
       for (auto& field : fields) {
           std::cout<<"name of field: " <<field.name<<std::endl;

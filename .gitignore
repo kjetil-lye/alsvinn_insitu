@@ -31,12 +31,20 @@
 *.out
 *.app
 
+<<<<<<< HEAD
 #data
 data/*.nc
 *.nc
 *.jpg
 *.avi
 *.png
+=======
+#all datafiles
+*.nc
+*.png
+*.avi
+*.jpg
+>>>>>>> fixed ghost cell problem, added converson scritps
 
 #build folder but not export header
 build/*

@@ -40,6 +40,7 @@ data/*.nc
 *.png
 =======
 #all datafiles
+data/*
 *.nc
 *.png
 *.avi

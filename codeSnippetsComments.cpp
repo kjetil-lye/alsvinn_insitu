@@ -4,9 +4,7 @@
 
 
 
-
-
-
+cmake .. -DCMAKE_PREFIX_PATH=$HOME/MasterthesisLOCAL/coding/alsvinn_dependencies -DALSVINN_USE_CUDA=OFF -DALSVINN_PYTHON_VERSION=2.7
 
 /home/ramona/MasterthesisLOCAL/coding/alsvinn/build/alsuqcli/alsuqcli
 
@@ -19,9 +17,39 @@
 
 
 
+if(true)
+            {
+                    int extend[6]  = {0,nx-1,0,ny-1,0,nz-1};//{ngx, nx+ngx, ngy, ny+ngy, ngz, 0}; //nz+ngz };
+
+                    if (VTKGrid == NULL)
+                    {
+                            VTKGrid = vtkImageData::New();
+                            VTKGrid->SetExtent(extend); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
+                    }
+
+
+                    dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
+                    // For structured grids we need to specify the global data extents
+                    dataDescription->GetInputDescriptionByName("input")->SetWholeExtent(extend);
+
+                    vtkDoubleArray* field_array = vtkDoubleArray::New();
+                    field_array->SetName(variable_name);
+                    field_array->SetArray(variable_data, VTKGrid->GetNumberOfPoints(), 1);
+                    VTKGrid->GetPointData()->AddArray(field_array);
+                    field_array->Delete();
+
+                    Processor->CoProcess(dataDescription);
+            }
+
+    else{
 
 
 
+      
+
+
+std::cout << "description_name " <<description_name<< std::endl;
+std::cout << "variable_name: " <<variable_name<< std::endl;
 
 for(int i=0; i<numScripts; i++)
 {

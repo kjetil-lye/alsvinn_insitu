@@ -7,11 +7,11 @@
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 0</upperCorner>
-    <dimension>32 32 1</dimension>
+    <dimension>24 24 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>2</endTime>
+  <endTime>1</endTime>
   <equation>euler2</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -24,7 +24,7 @@
 
   </functionals>
   <initialData>
-    <python>testing.py</python>
+    <python>kelvinhelmholtz.py</python>
     <parameters>
       <parameter>
         <name>a</name>
@@ -58,7 +58,7 @@
     <name>
       meanvar
     </name>
-    <numberOfSaves>20</numberOfSaves>
+    <numberOfSaves>10</numberOfSaves>
     <writer>
       <type>netcdf</type>
       <basename>kh</basename>

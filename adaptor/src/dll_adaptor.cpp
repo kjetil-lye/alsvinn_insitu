@@ -98,16 +98,15 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
         dataDescription->AddInput("input");
 
         // the last time step shuld always be output
-        if(my_data->isEndTimestep()) {
+        if( my_data->isNewVariable(variable_name) || my_data->isNewTimestep() || my_data->isEndTimestep() ) {
                 dataDescription->ForceOutputOn();
         }
 
-        std::cout << "description_name " <<description_name<< std::endl;
-        std::cout << "variable_name: " <<variable_name<< std::endl;
+
 
         //since we take the number of outputs from the alsvinn simulation and not form the PythonScriptProcessor ->RequestDataDescription(dataDescription)!=0)
         //either we are looking at new variable or new timestep or the last time step
-        if(Processor->RequestDataDescription(dataDescription)!=0 || my_data->isNewVariable(variable_name) || my_data->isNewTimestep() || my_data->isEndTimestep() )
+        if(Processor->RequestDataDescription(dataDescription)!=0  )
         {
 
                 int extend[6]  = {0,nx-1,0,ny-1,0,nz-1};//{ngx, nx+ngx, ngy, ny+ngy, ngz, 0}; //nz+ngz };
@@ -123,9 +122,28 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 // For structured grids we need to specify the global data extents
                 dataDescription->GetInputDescriptionByName("input")->SetWholeExtent(extend);
 
+                const int maxIndex =  nx*ny*nz; //(nz+ngz-1)*(nx+2*ngx)*(ny+2*ngy)+(ny+ngy-1)*(nx*2*ngx)+(nx+ngx-1); //nx*ny*nz
+                // Create a field associated with points
                 vtkDoubleArray* field_array = vtkDoubleArray::New();
+
+                field_array->SetNumberOfComponents(1);
+                field_array->SetNumberOfTuples(maxIndex);
                 field_array->SetName(variable_name);
-                field_array->SetArray(variable_data, VTKGrid->GetNumberOfPoints(), 1);
+                int index = 0;
+                int idx = 0;
+                for (int z = ngz; z < nz + ngz; ++z) {
+                        // ignoring ghost cells (ngy is number of ghost cells in y direction)
+                        for (int y = ngy; y < ny + ngy; ++y) {
+                                // ignoring ghost cells (ngx is number of ghost cells in x direction)
+                                for (int x = ngx; x < nx + ngx; ++x) {
+                                        index = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
+                                        field_array->SetValue(idx, variable_data[index]);
+                                        idx += 1;
+                                }
+                        }
+
+                }
+
                 VTKGrid->GetPointData()->AddArray(field_array);
                 field_array->Delete();
 
@@ -181,7 +199,7 @@ DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
         PRINT_PARAM(time);
         auto my_parameters = static_cast<MyParameters*>(parameters);
         auto my_data = static_cast<MyData*>(data);
-        my_data->setCurrentTimestep(time);
+        my_data->setCurrentTimestep(timestep_number);
         my_data->setNewTimestep(true);
 
         if(time >= std::stoi(my_parameters->getParameter("endTime"))) {

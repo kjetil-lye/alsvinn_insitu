@@ -10,8 +10,8 @@ import numpy as np
 import argparse
 
 if __name__ == '__main__':
-    
-    
+
+
     parser = argparse.ArgumentParser(description="""
 Converts the file to the old netcdf file format
             """)
@@ -24,7 +24,7 @@ Converts the file to the old netcdf file format
 
 
     args = parser.parse_args()
-    
+
     xdim = None
     ydim = None
     zdim = None
@@ -43,14 +43,13 @@ Converts the file to the old netcdf file format
                         xdim = outf.createDimension("x", d.shape[0])
                         ydim = outf.createDimension("y", d.shape[1])
                         zdim = outf.createDimension("z", d.shape[2])
-                        
+
                     newvar = outf.createVariable(v, d.dtype, ("x", "y", "z"))
                     newvar[:,:,:] = d[:,:,:]
             # copy over the attributes (this is not really needed, but nice for tracing what was done)
             for attribute_name in f.ncattrs():
                 outf.setncattr(attribute_name, f.getncattr(attribute_name))
-                        
+
             outf.setncattr("IMPORTANT_NODE", """
 This file was converted with the script "convert_to_old_format.py" to be compatiable with paraview.
             """)
-

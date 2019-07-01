@@ -7,11 +7,19 @@
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 0</upperCorner>
+<<<<<<< HEAD
     <dimension>64 64 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
   <endTime>1</endTime>
+=======
+    <dimension>128 128 1</dimension>
+  </grid>
+  <boundary>periodic</boundary>
+  <flux>hll3</flux>
+  <endTime>2</endTime>
+>>>>>>> 150e4a2bd0b2740903a12178136e0a5addbd7d56
   <equation>euler2</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -50,9 +58,15 @@
       <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
+<<<<<<< HEAD
       <endTime>1</endTime>
       <basename>kh</basename>
       <numberOfSaves>10</numberOfSaves>
+=======
+      <endTime>2</endTime>
+      <basename>kh</basename>
+      <numberOfSaves>20</numberOfSaves>
+>>>>>>> 150e4a2bd0b2740903a12178136e0a5addbd7d56
     </writer>
 </fvm>
 <uq>

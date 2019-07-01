@@ -40,7 +40,11 @@
   <writer>
     <type>netcdf</type>
     <basename>kh</basename>
+<<<<<<< HEAD
     <numberOfSaves>10</numberOfSaves>
+=======
+    <numberOfSaves>20</numberOfSaves>
+>>>>>>> 150e4a2bd0b2740903a12178136e0a5addbd7d56
   </writer>
 </fvm>
 <uq>

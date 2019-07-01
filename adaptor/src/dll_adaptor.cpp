@@ -131,6 +131,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 field_array->SetName(variable_name);
                 int index = 0;
                 int idx = 0;
+                    // ignoring ghost cells (ngy is number of ghost cells in z direction)
                 for (int z = ngz; z < nz + ngz; ++z) {
                         // ignoring ghost cells (ngy is number of ghost cells in y direction)
                         for (int y = ngy; y < ny + ngy; ++y) {

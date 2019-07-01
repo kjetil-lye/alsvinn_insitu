@@ -1,0 +1,13 @@
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+Git version:       6a3064358bd781dec88eec33d8f3021bb6272e60
+Repository was:    DIRTY
+Build type :       Release
+CUDA Version:      
+Extra CXX flags:   
+CUDA flags:        
+Floating point:    double (double precision, 64 bits)
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+omp max threads= 4
+Error!
+<unspecified file>: read error

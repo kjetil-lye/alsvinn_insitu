@@ -10,16 +10,26 @@ extern "C" {
 
 //"CatalystInitiazlize"
 DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
+<<<<<<< HEAD
                                 const char* simulator_version, void* parameters);
+=======
+    const char* simulator_version, void* parameters);
+>>>>>>> 150e4a2bd0b2740903a12178136e0a5addbd7d56
 
 //"Catalyst Finalize"
 DLL_ADAPTOR_EXPORT void delete_data(void* data);
 
 //"Catalyst CoProcess"
 DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double time,
+<<<<<<< HEAD
                                           const char* variable_name,  double* variable_data, int nx, int ny, int nz,
                                           int ngx, int ngy, int ngz, double ax, double ay, double az, double bx,
                                           double by, double bz, int gpu_number );
+=======
+    const char* variable_name,  double* variable_data, int nx, int ny, int nz,
+    int ngx, int ngy, int ngz, double ax, double ay, double az, double bx,
+    double by, double bz, int gpu_number );
+>>>>>>> 150e4a2bd0b2740903a12178136e0a5addbd7d56
 
 DLL_ADAPTOR_EXPORT void* make_parameters();
 
@@ -29,6 +39,7 @@ DLL_ADAPTOR_EXPORT void delete_parameters(void* parameters);
 DLL_ADAPTOR_EXPORT bool needs_data_on_host(void* data, void* parameters);
 
 DLL_ADAPTOR_EXPORT void set_parameter(void* parameters, const char* key,
+<<<<<<< HEAD
                                       const char* value);
 
 DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
@@ -39,6 +50,18 @@ DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
 
 DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
                                      int timestep_number);
+=======
+    const char* value);
+
+DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
+    MPI_Comm communicator);
+
+DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
+    int timestep_number);
+
+DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
+    int timestep_number);
+>>>>>>> 150e4a2bd0b2740903a12178136e0a5addbd7d56
 #ifdef __cplusplus
 }
 #endif

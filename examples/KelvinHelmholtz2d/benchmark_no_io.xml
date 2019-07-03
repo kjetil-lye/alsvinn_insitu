@@ -38,7 +38,7 @@
   <writer>
     <type>netcdf</type>
     <basename>none</basename>
-    <numberOfSaves>0</numberOfSaves>
+    <numberOfSaves>1</numberOfSaves>
   </writer>
 </fvm>
 <uq>
@@ -56,7 +56,7 @@
     <name>
       meanvar
     </name>
-    <numberOfSaves>0</numberOfSaves>
+    <numberOfSaves>1</numberOfSaves>
     <writer>
       <type>netcdf</type>
       <basename>kh</basename>

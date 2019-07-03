@@ -45,7 +45,7 @@ if(true)
 
 
 
-      
+
 
 
 std::cout << "description_name " <<description_name<< std::endl;
@@ -53,8 +53,7 @@ std::cout << "variable_name: " <<variable_name<< std::endl;
 
 for(int i=0; i<numScripts; i++)
 {
-        vtkCPPythonScriptPipeline* pipeline =d
-                                              vtkCPPythonScriptPipeline::New();
+        vtkCPPythonScriptPipeline* pipeline =    vtkCPPythonScriptPipeline::New();
         pipeline->Initialize(scripts[i]);
         Processor->AddPipeline(pipeline);
         pipeline->Delete();

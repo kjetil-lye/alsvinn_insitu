@@ -35,26 +35,36 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
         {
                 Processor->RemoveAllPipelines();
         }
-
         //default script
-        const char *script_default = "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/gridwriter.py";
-        auto my_parameters = static_cast<MyParameters*>(parameters);
-        const std::string script_str = my_parameters->getParameter("pipelineScript");
-        const char *script_loc = script_str.c_str();
+        const char *script_default = "../scripts/gridwriter.py";
 
         vtkNew<vtkCPPythonScriptPipeline> pipeline;
+        pipeline->Initialize(script_default);
+        Processor->AddPipeline(pipeline);
+
+        // @Tosdo add pipleinescript to xml
+        // png etc script
+        auto my_parameters = static_cast<MyParameters*>(parameters);
+        const std::string script_str = my_parameters->getParameter("basename");
+        const char *script_loc = script_str.c_str();
+
+
+
         if(script_str =="none")
         {
-                pipeline->Initialize(script_default);
-                std::cout<<"pipeline script: "<< script_default<<std::endl;
+                std::cout<<"only default pipeline script: "<< script_default<<std::endl;
         }
         else{
-                pipeline->Initialize(script_loc);
                 std::cout<<"pipeline script: "<< script_loc<<std::endl;
+                pipeline->Initialize(script_loc);
+                Processor->AddPipeline(pipeline);
         }
-        Processor->AddPipeline(pipeline.GetPointer());
 
 
+    //    Processor->AddPipeline(pipeline.GetPointer());
+        //testing second pipeline script
+  //      const char *script_test = "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/zom.py";
+//
         // @TOO DO WE NEED MULTIPLE SCRIPTS?
 
         return static_cast<void*>(new MyData);
@@ -90,8 +100,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
         auto my_data = static_cast<MyData*>(data);
         auto my_parameters = static_cast<MyParameters*>(parameters);
         auto timeStep = my_data->getCurrentTimestep();
-        const std::string description_namestr = my_parameters->getParameter("basename");
-        const char *description_name = description_namestr.c_str();
+    //    const std::string description_namestr = my_parameters->getParameter("basename");        const char *description_name = description_namestr.c_str();
 
         vtkCPDataDescription* dataDescription = vtkCPDataDescription::New();
         dataDescription->SetTimeData(time, timeStep);

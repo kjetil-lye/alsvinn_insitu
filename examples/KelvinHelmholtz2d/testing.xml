@@ -7,11 +7,11 @@
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 0</upperCorner>
-    <dimension>24 24 1</dimension>
+    <dimension>64 64 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>1</endTime>
+  <endTime>2</endTime>
   <equation>euler2</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -50,9 +50,9 @@
       <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
-      <endTime>1</endTime>
-      <basename>kh</basename>
-      <numberOfSaves>10</numberOfSaves>
+      <endTime>2</endTime>
+      <basename>none</basename>
+      <numberOfSaves>40</numberOfSaves>
     </writer>
 </fvm>
 <uq>
@@ -70,7 +70,7 @@
     <name>
       meanvar
     </name>
-    <numberOfSaves>10</numberOfSaves>
+    <numberOfSaves>1</numberOfSaves>
     <writer>
       <type>netcdf</type>
       <basename>kh</basename>
@@ -79,4 +79,5 @@
 
   </stats>
 </uq>
+
 </config>

@@ -7,7 +7,7 @@
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 0</upperCorner>
-    <dimension>512 512 1</dimension>
+    <dimension>24 24 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
@@ -51,7 +51,7 @@
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
       <endTime>2</endTime>
-      <basename>none</basename>
+      <basename>../scripts/white.py</basename>
       <numberOfSaves>40</numberOfSaves>
     </writer>
 </fvm>

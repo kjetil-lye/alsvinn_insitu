@@ -51,7 +51,7 @@
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
       <endTime>2</endTime>
-      <basename>none</basename>
+      <basename>../scripts/white.py</basename>
       <numberOfSaves>40</numberOfSaves>
     </writer>
 </fvm>
@@ -70,7 +70,7 @@
     <name>
       meanvar
     </name>
-    <numberOfSaves>1</numberOfSaves>
+    <numberOfSaves>0</numberOfSaves>
     <writer>
       <type>netcdf</type>
       <basename>kh</basename>

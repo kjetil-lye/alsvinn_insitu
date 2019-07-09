@@ -56,7 +56,7 @@
     <name>
       meanvar
     </name>
-    <numberOfSaves>1</numberOfSaves>
+    <numberOfSaves>0</numberOfSaves>
     <writer>
       <type>netcdf</type>
       <basename>kh</basename>

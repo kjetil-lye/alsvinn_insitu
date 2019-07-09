@@ -15,7 +15,7 @@ void setParameter(const std::string& key, const std::string& value) {
 std::string getParameter(const std::string& key) const {
         std::string out ="none";
         if ( parameters.find(key) == parameters.end() ) {
-                std::cerr<<"warning: missing parameter: "<<key <<std::endl;
+                std::cerr<<"! warning: missing parameter: "<<key <<std::endl;
         }else{
                 try{
                         out= parameters.at(key);

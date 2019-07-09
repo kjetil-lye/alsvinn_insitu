@@ -45,7 +45,7 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
         // @Tosdo add pipleinescript to xml
         // png etc script
         auto my_parameters = static_cast<MyParameters*>(parameters);
-        const std::string script_str = my_parameters->getParameter("basename");
+        const std::string script_str = my_parameters->getParameter("catalystscript");
         const char *script_loc = script_str.c_str();
 
 
@@ -54,16 +54,17 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
         {
                 std::cout<<"only default pipeline script: "<< script_default<<std::endl;
         }
-        else{
+        else
+        {
                 std::cout<<"pipeline script: "<< script_loc<<std::endl;
                 pipeline->Initialize(script_loc);
                 Processor->AddPipeline(pipeline);
         }
 
 
-    //    Processor->AddPipeline(pipeline.GetPointer());
+        //    Processor->AddPipeline(pipeline.GetPointer());
         //testing second pipeline script
-  //      const char *script_test = "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/zom.py";
+        //      const char *script_test = "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/zom.py";
 //
         // @TOO DO WE NEED MULTIPLE SCRIPTS?
 
@@ -100,7 +101,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
         auto my_data = static_cast<MyData*>(data);
         auto my_parameters = static_cast<MyParameters*>(parameters);
         auto timeStep = my_data->getCurrentTimestep();
-    //    const std::string description_namestr = my_parameters->getParameter("basename");        const char *description_name = description_namestr.c_str();
+        //    const std::string description_namestr = my_parameters->getParameter("basename");        const char *description_name = description_namestr.c_str();
 
         vtkCPDataDescription* dataDescription = vtkCPDataDescription::New();
         dataDescription->SetTimeData(time, timeStep);
@@ -140,7 +141,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 field_array->SetName(variable_name);
                 int index = 0;
                 int idx = 0;
-                    // ignoring ghost cells (ngy is number of ghost cells in z direction)
+                // ignoring ghost cells (ngy is number of ghost cells in z direction)
                 for (int z = ngz; z < nz + ngz; ++z) {
                         // ignoring ghost cells (ngy is number of ghost cells in y direction)
                         for (int y = ngy; y < ny + ngy; ++y) {

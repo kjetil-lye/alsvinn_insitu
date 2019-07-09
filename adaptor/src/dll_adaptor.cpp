@@ -1,6 +1,8 @@
 #include "dll_adaptor.hpp"
 #include "parameters.hpp"
 #include "data.hpp"
+#include "isosurfaceVtkPipeline.hpp"
+
 #include <fstream>
 #include <limits>
 #include <iomanip>
@@ -25,7 +27,12 @@ vtkImageData* VTKGrid = NULL;
 DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
                                 const char* simulator_version, void* parameters) {
 
-        // Initialize catalyst, set processes
+
+        auto my_parameters = static_cast<MyParameters*>(parameters);
+        const std::string version = my_parameters->getParameter("basename");
+
+
+              // Initialize catalyst, set processes
         if (Processor == NULL)
         {
                 Processor = vtkCPProcessor::New();
@@ -35,6 +42,19 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
         {
                 Processor->RemoveAllPipelines();
         }
+
+
+        if(version=="meanVar")
+        {
+           int outputFrequency=1;
+           std::string name = "out";
+          vtkNew<isosurfaceVtkPipeline> pipelinevtk;
+          pipelinevtk->Initialize(outputFrequency, name);
+          Processor->AddPipeline(pipelinevtk);
+
+        }
+        else
+        {
         //default script
         const char *script_default = "../scripts/gridwriter.py";
 
@@ -42,9 +62,7 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
         pipeline->Initialize(script_default);
         Processor->AddPipeline(pipeline);
 
-        // @Tosdo add pipleinescript to xml
         // png etc script
-        auto my_parameters = static_cast<MyParameters*>(parameters);
         const std::string script_str = my_parameters->getParameter("catalystscript");
         const char *script_loc = script_str.c_str();
 
@@ -60,6 +78,10 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
                 pipeline->Initialize(script_loc);
                 Processor->AddPipeline(pipeline);
         }
+
+      }//endif meanVar
+
+
 
 
         //    Processor->AddPipeline(pipeline.GetPointer());
@@ -107,12 +129,13 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
         dataDescription->SetTimeData(time, timeStep);
         dataDescription->AddInput("input");
 
+
+
+
         // the last time step shuld always be output
         if( my_data->isNewVariable(variable_name) || my_data->isNewTimestep() || my_data->isEndTimestep() ) {
                 dataDescription->ForceOutputOn();
         }
-
-
 
         //since we take the number of outputs from the alsvinn simulation and not form the PythonScriptProcessor ->RequestDataDescription(dataDescription)!=0)
         //either we are looking at new variable or new timestep or the last time step

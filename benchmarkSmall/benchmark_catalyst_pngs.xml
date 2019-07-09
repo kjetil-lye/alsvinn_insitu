@@ -51,7 +51,8 @@
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
       <endTime>2</endTime>
-      <basename>../scripts/white.py</basename>
+      <basename>kh</basename>
+      <catalystscript>../scripts/white.py</catalystscript>
       <numberOfSaves>40</numberOfSaves>
     </writer>
 </fvm>

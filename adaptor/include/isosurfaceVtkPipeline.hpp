@@ -10,6 +10,7 @@ class vtkCPPythonHelper;
 class isosurfaceVtkPipeline : public vtkCPPipeline
 {
 public:
+  
   static isosurfaceVtkPipeline* New();
   vtkTypeMacro(isosurfaceVtkPipeline, vtkCPPipeline);
   virtual void PrintSelf(ostream& os, vtkIndent indent);

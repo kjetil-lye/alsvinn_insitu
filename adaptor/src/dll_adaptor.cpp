@@ -17,6 +17,8 @@
 #include <vtkPointData.h>
 #include <vtkPoints.h>
 
+
+
 // Simple macro to print parameters
 #define PRINT_PARAM(X) std::cout << "Value of " << #X << " is " << X << std::endl
 extern "C" {
@@ -32,7 +34,7 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
         const std::string version = my_parameters->getParameter("basename");
 
 
-              // Initialize catalyst, set processes
+        // Initialize catalyst, set processes
         if (Processor == NULL)
         {
                 Processor = vtkCPProcessor::New();
@@ -44,51 +46,40 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
         }
 
 
-        if(version=="meanVar")
+        if(false) //version=="meanVar")
         {
-           int outputFrequency=1;
-           std::string name = "out";
-          vtkNew<isosurfaceVtkPipeline> pipelinevtk;
-          pipelinevtk->Initialize(outputFrequency, name);
-          Processor->AddPipeline(pipelinevtk);
+                int outputFrequency=1;
+                std::string name = "out";
+                vtkNew<isosurfaceVtkPipeline> pipelinevtk;
+                pipelinevtk->Initialize(outputFrequency, name);
+                Processor->AddPipeline(pipelinevtk);
 
         }
         else
         {
-        //default script
-        const char *script_default = "../scripts/gridwriter.py";
+                //default script
+                const char *script_default = "../pythonScripts/gridwriter.py";
 
-        vtkNew<vtkCPPythonScriptPipeline> pipeline;
-        pipeline->Initialize(script_default);
-        Processor->AddPipeline(pipeline);
-
-        // png etc script
-        const std::string script_str = my_parameters->getParameter("catalystscript");
-        const char *script_loc = script_str.c_str();
-
-
-
-        if(script_str =="none")
-        {
-                std::cout<<"only default pipeline script: "<< script_default<<std::endl;
-        }
-        else
-        {
-                std::cout<<"pipeline script: "<< script_loc<<std::endl;
-                pipeline->Initialize(script_loc);
+                vtkNew<vtkCPPythonScriptPipeline> pipeline;
+                pipeline->Initialize(script_default);
                 Processor->AddPipeline(pipeline);
+
+                // png etc script
+                const std::string script_str = my_parameters->getParameter("catalystscript");
+                const char *script_loc = script_str.c_str();
+
+                if(script_str =="none")
+                {
+                        std::cout<<"only default pipeline script: "<< script_default<<std::endl;
+                }
+                else
+                {
+                        std::cout<<"pipeline script: "<< script_loc<<std::endl;
+                        pipeline->Initialize(script_loc);
+                        Processor->AddPipeline(pipeline);
+                }
+
         }
-
-      }//endif meanVar
-
-
-
-
-        //    Processor->AddPipeline(pipeline.GetPointer());
-        //testing second pipeline script
-        //      const char *script_test = "/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/scripts/zom.py";
-//
-        // @TOO DO WE NEED MULTIPLE SCRIPTS?
 
         return static_cast<void*>(new MyData);
 }
@@ -120,72 +111,104 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                           int ngx, int ngy, int ngz, double ax, double ay, double az, double bx,
                                           double by, double bz, int gpu_number ) {
 
-        auto my_data = static_cast<MyData*>(data);
-        auto my_parameters = static_cast<MyParameters*>(parameters);
-        auto timeStep = my_data->getCurrentTimestep();
-        //    const std::string description_namestr = my_parameters->getParameter("basename");        const char *description_name = description_namestr.c_str();
-
-        vtkCPDataDescription* dataDescription = vtkCPDataDescription::New();
-        dataDescription->SetTimeData(time, timeStep);
-        dataDescription->AddInput("input");
 
 
-
-
-        // the last time step shuld always be output
-        if( my_data->isNewVariable(variable_name) || my_data->isNewTimestep() || my_data->isEndTimestep() ) {
-                dataDescription->ForceOutputOn();
-        }
-
-        //since we take the number of outputs from the alsvinn simulation and not form the PythonScriptProcessor ->RequestDataDescription(dataDescription)!=0)
-        //either we are looking at new variable or new timestep or the last time step
-        if(Processor->RequestDataDescription(dataDescription)!=0  )
+//asuming only one variable: rho:
+        if(std::string(variable_name)=="rho")
         {
+                auto my_data = static_cast<MyData*>(data);
+                auto my_parameters = static_cast<MyParameters*>(parameters);
+                //  auto timeStep = my_data->getCurrentTimestep();
+                //    const std::string description_namestr = my_parameters->getParameter("basename");        const char *description_name = description_namestr.c_str();
 
-                int extend[6]  = {0,nx-1,0,ny-1,0,nz-1};//{ngx, nx+ngx, ngy, ny+ngy, ngz, 0}; //nz+ngz };
+                int mpi_rank;
+                MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
+                int mpi_size;
+                MPI_Comm_size(my_parameters->getMPIComm(), &mpi_size);
 
-                if (VTKGrid == NULL)
-                {
-                        VTKGrid = vtkImageData::New();
-                        VTKGrid->SetExtent(extend); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
+                //check if we can run all in parallel:
+                 int nsamples = std::stoi(my_parameters->getParameter("samples"));
+                if(mpi_size <=  nsamples) {
+                        std::cerr<< "WARNING: NOT ENOUGH MPI NODES, reduce sample size to number of NODES: "<< mpi_size<<std::endl;
                 }
 
 
-                dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
-                // For structured grids we need to specify the global data extents
-                dataDescription->GetInputDescriptionByName("input")->SetWholeExtent(extend);
+                          //    if(mpi_rank == 0) ?
+                vtkCPDataDescription* dataDescription = vtkCPDataDescription::New();
+                dataDescription->SetTimeData(my_data->getCurrentTime(), my_data->getCurrentTimestep());
+                dataDescription->AddInput("input");
 
-                const int maxIndex =  nx*ny*nz; //(nz+ngz-1)*(nx+2*ngx)*(ny+2*ngy)+(ny+ngy-1)*(nx*2*ngx)+(nx+ngx-1); //nx*ny*nz
-                // Create a field associated with points
-                vtkDoubleArray* field_array = vtkDoubleArray::New();
+                size_t ndata = (ngx*2+nx)*(ny+2*ngy)*(nz+2*ngz);    //(nz+ngz-1)*(nx+2*ngx)*(ny+2*ngy)+(ny+ngy-1)*(nx*2*ngx)+(nx+ngx-1); //nx*ny*nz
+                double* avrg_data;
+                if(mpi_size>1) {
+                        MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
+                }else{
+                        //treat as seperate sampels
+                        avrg_data = variable_data;
+                        nsamples = 1;
+                }
 
-                field_array->SetNumberOfComponents(1);
-                field_array->SetNumberOfTuples(maxIndex);
-                field_array->SetName(variable_name);
-                int index = 0;
-                int idx = 0;
-                // ignoring ghost cells (ngy is number of ghost cells in z direction)
-                for (int z = ngz; z < nz + ngz; ++z) {
-                        // ignoring ghost cells (ngy is number of ghost cells in y direction)
-                        for (int y = ngy; y < ny + ngy; ++y) {
-                                // ignoring ghost cells (ngx is number of ghost cells in x direction)
-                                for (int x = ngx; x < nx + ngx; ++x) {
-                                        index = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
-                                        field_array->SetValue(idx, variable_data[index]);
-                                        idx += 1;
-                                }
+
+
+                if(mpi_rank == 0)
+                {
+
+                        // the last time step shuld always be output
+                        //either we are looking at new variable or new timestep or the last time step
+                        if( my_data->isNewVariable(variable_name) || my_data->isNewTimestep() || my_data->isEndTimestep() ) {
+                                dataDescription->ForceOutputOn();
                         }
 
+
+                        if(Processor->RequestDataDescription(dataDescription)!=0 )
+                        {
+
+                                int extend[6]  = {0,nx-1,0,ny-1,0,nz-1};//{ngx, nx+ngx, ngy, ny+ngy, ngz, 0}; //nz+ngz };
+
+                                if (VTKGrid == NULL)
+                                {
+                                        VTKGrid = vtkImageData::New();
+                                        VTKGrid->SetExtent(extend); //ngx, ngx+nx, ngy, ngy+ny, ngz, ngz+nz);
+                                }
+
+
+                                dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
+                                // For structured grids we need to specify the global data extents
+                                dataDescription->GetInputDescriptionByName("input")->SetWholeExtent(extend);
+
+
+                                // Create a field associated with points
+                                vtkDoubleArray* field_array = vtkDoubleArray::New();
+                                int ntuples = nx*ny*nz;
+                                field_array->SetNumberOfComponents(1);
+                                field_array->SetNumberOfTuples(ntuples);
+                                field_array->SetName(variable_name);
+                                int index = 0;
+                                int idx = 0;
+                                // ignoring ghost cells (ngy is number of ghost cells in z direction)
+                                for (int z = ngz; z < nz + ngz; ++z) {
+                                        // ignoring ghost cells (ngy is number of ghost cells in y direction)
+                                        for (int y = ngy; y < ny + ngy; ++y) {
+                                                // ignoring ghost cells (ngx is number of ghost cells in x direction)
+                                                for (int x = ngx; x < nx + ngx; ++x) {
+                                                        index = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
+                                                        field_array->SetValue(idx, avrg_data[index]/double(nsamples));
+                                                        idx += 1;
+                                                }
+                                        }
+
+                                }
+
+                                VTKGrid->GetPointData()->AddArray(field_array);
+                                field_array->Delete();
+
+                                Processor->CoProcess(dataDescription);
+                        }
+
+                        dataDescription->Delete();
+                        my_data->setNewTimestep(false);
                 }
-
-                VTKGrid->GetPointData()->AddArray(field_array);
-                field_array->Delete();
-
-                Processor->CoProcess(dataDescription);
-        }
-
-        dataDescription->Delete();
-        my_data->setNewTimestep(false);
+        }//endif rho
 }
 
 
@@ -234,11 +257,13 @@ DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
         auto my_parameters = static_cast<MyParameters*>(parameters);
         auto my_data = static_cast<MyData*>(data);
         my_data->setCurrentTimestep(timestep_number);
+        my_data->setCurrentTime(time);
         my_data->setNewTimestep(true);
 
         if(time >= std::stoi(my_parameters->getParameter("endTime"))) {
                 my_data->setEndTimeStep(true);
         }
+
 
 }
 

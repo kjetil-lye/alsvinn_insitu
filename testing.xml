@@ -53,10 +53,11 @@
       <endTime>2</endTime>
       <basename>meanVar</basename>
       <numberOfSaves>4</numberOfSaves>
+      <samples>3</samples>
     </writer>
 </fvm>
 <uq>
-  <samples>1</samples>
+  <samples>3</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>

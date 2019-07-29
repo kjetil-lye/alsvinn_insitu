@@ -32,8 +32,8 @@ void setMPIComm(MPI_Comm comm) {
 }
 
 
-MPI_Comm getMPIComm(MPI_Comm comm) {
-        return comm;
+MPI_Comm getMPIComm() {
+        return mpiComm;
 }
 
 private:

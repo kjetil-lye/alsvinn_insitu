@@ -33,7 +33,7 @@ void setMPIComm(MPI_Comm comm) {
 
 
 MPI_Comm getMPIComm() {
-        return MPI_COMM_WORLD; // mpiComm;
+        return mpiComm;
 }
 
 private:

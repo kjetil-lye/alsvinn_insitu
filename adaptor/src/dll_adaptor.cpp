@@ -2,7 +2,7 @@
 #include "parameters.hpp"
 #include "data.hpp"
 #include "isosurfaceVtkPipeline.hpp"
-
+#include <mpi.h>
 #include <fstream>
 #include <limits>
 #include <iomanip>
@@ -28,6 +28,7 @@ vtkImageData* VTKGrid = NULL;
 
 DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
                                 const char* simulator_version, void* parameters) {
+
 
 
         auto my_parameters = static_cast<MyParameters*>(parameters);
@@ -120,16 +121,23 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 auto my_parameters = static_cast<MyParameters*>(parameters);
                 //  auto timeStep = my_data->getCurrentTimestep();
                 //    const std::string description_namestr = my_parameters->getParameter("basename");        const char *description_name = description_namestr.c_str();
+                int mpi_init;
+                MPI_Initialized(&mpi_init);
+                if(mpi_init){
+                  std::cerr<< "MPI has been initialized"<<std::endl;
+                  std::cerr<< "using Comm : "<< my_parameters->getMPIComm() <<std::endl;
+                  }else{
+                     std::cerr<< "MPI has"<<"NOT"<<" been Initialized"<<std::endl;
+                   }
 
                 int mpi_rank;
                 MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
                 int mpi_size;
                 MPI_Comm_size(my_parameters->getMPIComm(), &mpi_size);
-
                 //check if we can run all in parallel:
                  int nsamples = std::stoi(my_parameters->getParameter("samples"));
                 if(mpi_size <=  nsamples) {
-                        std::cerr<< "WARNING: NOT ENOUGH MPI NODES, reduce sample size to number of NODES: "<< mpi_size<<std::endl;
+                        std::cerr<< "warning: not enough mpi nodes,  reduce sample size to number of mpi nodes: "<< mpi_size<<std::endl;
                 }
 
 
@@ -138,17 +146,27 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 dataDescription->SetTimeData(my_data->getCurrentTime(), my_data->getCurrentTimestep());
                 dataDescription->AddInput("input");
 
-                size_t ndata = (ngx*2+nx)*(ny+2*ngy)*(nz+2*ngz);    //(nz+ngz-1)*(nx+2*ngx)*(ny+2*ngy)+(ny+ngy-1)*(nx*2*ngx)+(nx+ngx-1); //nx*ny*nz
-                double* avrg_data;
-                if(mpi_size>1) {
-                        MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
-                }else{
-                        //treat as seperate sampels
-                        avrg_data = variable_data;
-                        nsamples = 1;
+                const size_t ndata = (ngx*2+nx)*(ny+2*ngy)*(nz+2*ngz);    //(nz+ngz-1)*(nx+2*ngx)*(ny+2*ngy)+(ny+ngy-1)*(nx*2*ngx)+(nx+ngx-1); //nx*ny*nz
+                double avrg_data[ndata];
+              //  double  avrg_sqr_data[ndata];
+
+              MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
+
+
+          //      double sqr_variable_data[ndata];
+//get squared sum to use for variance,
+            /*    for (int i = 0; i< ndata; ++i) {
+                  sqr_variable_data[i] = variable_data[i]*variable_data[i];
                 }
 
-
+                if(mpi_size>1) {
+                        MPI_Reduce(&sqr_variable_data, avrg_sqr_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
+                }else{
+                        //treat as seperate sampels
+                        avrg_sqr_data = sqr_variable_data;
+                        nsamples = 1;
+                }
+*/
 
                 if(mpi_rank == 0)
                 {
@@ -174,17 +192,21 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
 
                                 dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
                                 // For structured grids we need to specify the global data extents
-                                dataDescription->GetInputDescriptionByName("input")->SetWholeExtent(extend);
 
 
                                 // Create a field associated with points
-                                vtkDoubleArray* field_array = vtkDoubleArray::New();
+                                vtkDoubleArray* field_array_mean = vtkDoubleArray::New();
+                      //          vtkDoubleArray* field_array_var = vtkDoubleArray::New();
                                 int ntuples = nx*ny*nz;
-                                field_array->SetNumberOfComponents(1);
-                                field_array->SetNumberOfTuples(ntuples);
-                                field_array->SetName(variable_name);
+                                field_array_mean->SetNumberOfComponents(1);
+                                field_array_mean->SetNumberOfTuples(ntuples);
+                            //    field_array_var->SetNumberOfComponents(1);
+                    //            field_array_var->SetNumberOfTuples(ntuples);
+                                field_array_mean->SetName( (std::string(variable_name)+"_mean").c_str());
+                  //              field_array_var->SetName( (std::string(variable_name)+"_var").c_str() );
                                 int index = 0;
                                 int idx = 0;
+
                                 // ignoring ghost cells (ngy is number of ghost cells in z direction)
                                 for (int z = ngz; z < nz + ngz; ++z) {
                                         // ignoring ghost cells (ngy is number of ghost cells in y direction)
@@ -192,15 +214,20 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                                 // ignoring ghost cells (ngx is number of ghost cells in x direction)
                                                 for (int x = ngx; x < nx + ngx; ++x) {
                                                         index = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
-                                                        field_array->SetValue(idx, avrg_data[index]/double(nsamples));
+                                                        double tmp = avrg_data[index]/double(nsamples);
+                                                        field_array_mean->SetValue(idx, tmp);
+                                                         tmp = 1; //avrg_sqr_data[index]/double(nsamples)-(avrg_data[index]/double(nsamples))*(avrg_data[index]/double(nsamples));
+                                    //                    field_array_var->SetValue(idx, tmp);
                                                         idx += 1;
                                                 }
                                         }
 
                                 }
 
-                                VTKGrid->GetPointData()->AddArray(field_array);
-                                field_array->Delete();
+                                VTKGrid->GetPointData()->AddArray(field_array_mean);
+                        //        VTKGrid->GetPointData()->AddArray(field_array_var);
+                                field_array_mean->Delete();
+                      //          field_array_var->Delete();
 
                                 Processor->CoProcess(dataDescription);
                         }

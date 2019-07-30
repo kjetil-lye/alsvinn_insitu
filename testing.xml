@@ -6,8 +6,8 @@
   <platform>cpu</platform>
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
-    <upperCorner>1 1 1</upperCorner>
-    <dimension>8 8 8</dimension>
+    <upperCorner>1 1 0</upperCorner>
+    <dimension>64 64 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
@@ -53,11 +53,11 @@
       <endTime>1</endTime>
       <basename>meanVar</basename>
       <numberOfSaves>4</numberOfSaves>
-      <samples>3</samples>
+      <samples>9</samples>
     </writer>
 </fvm>
 <uq>
-  <samples>3</samples>
+  <samples>9</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>

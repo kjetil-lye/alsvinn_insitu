@@ -156,6 +156,12 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                         std::cerr<< "warning: not enough mpi nodes,  reduce sample size to number of mpi nodes: "<< mpi_size<<std::endl;
                 }
 
+                // make nsamples per group, to use for normalzation:
+                        if(nsamples%mpi_size!=0) {
+                        std::cerr<< "warning: nsmaples not divisible by mpi_size : "<< nsamples/mpi_size<<std::endl;
+                }
+
+                int norm_samples = nsamples; ///mpi_size;
 
 
 
@@ -165,8 +171,8 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
 
                 MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
 
-                double sqr_variable_data[ndata];
-                //get squared sum to use for variance,
+              double sqr_variable_data[ndata];
+                //get squared sum to use for variance, reuse variable_data to save space
                 for (int i = 0; i< ndata; ++i) {
                         sqr_variable_data[i] = variable_data[i]*variable_data[i];
                 }
@@ -226,10 +232,10 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                                 // ignoring ghost cells (ngx is number of ghost cells in x direction)
                                                 for (int x = ngx; x < nx + ngx; ++x) {
                                                         index = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
-                                                        double tmp = avrg_data[index]/double(nsamples);
+                                                        double tmp = avrg_data[index]/double(norm_samples);
                                                         field_array_mean->SetValue(idx, tmp);
-                                                        tmp *=(avrg_data[index]/double(nsamples));
-                                                        tmp =  avrg_sqr_data[index]/double(nsamples) -tmp;
+                                                      //  tmp *=(avrg_data[index]/double(nsamples));
+                                                        tmp =  avrg_sqr_data[index]/double(norm_samples) -tmp*tmp;
                                                         field_array_var->SetValue(idx, tmp);
                                                         idx += 1;
                                                 }

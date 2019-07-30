@@ -1,0 +1,23 @@
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+Git version:       f41f82299f473a9dd37eaa7f8f608402a25007ac
+Repository was:    DIRTY
+Build type :       
+CUDA Version:      
+Extra CXX flags:   
+CUDA flags:        
+Floating point:    double (double precision, 64 bits)
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+omp max threads= 1
+Error!
+Could not open file /home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/../testing.xml
+At /home/ramona/MasterthesisLOCAL/coding/alsvinn/alsutils/src/io/TextFileCache.cpp:48
+
+In function: std::__cxx11::string alsutils::io::TextFileCache::loadTextFile(const string&)
+Stacktrace:
+	 * alsutils::io::TextFileCache::loadTextFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) at line 746 (in /home/ramona/MasterthesisLOCAL/coding/alsvinn/build_new/alsutils/libalsutils.so)
+	 * alsuq::config::Setup::makeRunner(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::shared_ptr<alsutils::mpi::Configuration>, int, alsutils::vec3<int>) at line 144 (in /home/ramona/MasterthesisLOCAL/coding/alsvinn/build_new/alsuq/libalsuq.so)
+	 * main at line 3651 (in /home/ramona/MasterthesisLOCAL/coding/alsvinn/build_new/alsuqcli/alsuqcli)
+	 * __libc_start_main at line 231 (in /lib/x86_64-linux-gnu/libc.so.6)
+	 * _start at line 42 (in /home/ramona/MasterthesisLOCAL/coding/alsvinn/build_new/alsuqcli/alsuqcli)
+

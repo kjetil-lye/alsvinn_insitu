@@ -161,7 +161,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                         std::cerr<< "warning: nsmaples not divisible by mpi_size : "<< nsamples/mpi_size<<std::endl;
                 }
 
-                int norm_samples = nsamples; ///mpi_size;
+                int norm_samples = nsamples/mpi_size;
 
 
 

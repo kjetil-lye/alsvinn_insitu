@@ -6,8 +6,8 @@
   <platform>cpu</platform>
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
-    <upperCorner>1 1 0</upperCorner>
-    <dimension>128 128 1</dimension>
+    <upperCorner>1 1 1</upperCorner>
+    <dimension>8 8 8</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>

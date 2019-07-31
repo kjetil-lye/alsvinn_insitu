@@ -6,11 +6,14 @@
 #include <fstream>
 #include <limits>
 #include <iomanip>
+#include <algorithm>
 #include <iostream>
 #include <vtkCPDataDescription.h>
 #include <vtkCPInputDataDescription.h>
 #include <vtkCPProcessor.h>
 #include <vtkCPPythonScriptPipeline.h>
+#include <vtkFloatArray.h>
+#include <vtkIntArray.h>
 #include <vtkDoubleArray.h>
 #include <vtkImageData.h>
 #include <vtkNew.h>
@@ -169,6 +172,33 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 double avrg_data[ndata];
                 double avrg_sqr_data[ndata];
 
+
+
+
+
+                  //collect data points from frames:
+                  const  size_t nii = 2;
+                  int idxOfInterest[nii] = { 30, 156};
+
+
+
+                double *pnt_values;
+
+                if(mpi_rank ==0)
+                {
+                  pnt_values = (double*)malloc(sizeof(double) * (nii*mpi_size));
+                }
+
+                for ( int i =0; i<nii; i++){
+                  int idx = idxOfInterest[i];
+                  MPI_Gather(variable_data+idx, 1,  MPI_DOUBLE,  pnt_values+(i*mpi_size), 1, MPI_DOUBLE, 0,  my_parameters->getMPIComm());
+
+                }
+
+
+
+
+
                 MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
 
               double sqr_variable_data[ndata];
@@ -180,6 +210,9 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
 
                 MPI_Reduce(&sqr_variable_data, avrg_sqr_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
 
+
+
+
                 if(mpi_rank == 0)
                 {
                         auto my_data = static_cast<MyData*>(data);
@@ -187,6 +220,25 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                         vtkCPDataDescription*  dataDescription = vtkCPDataDescription::New();
                         dataDescription->SetTimeData(my_data->getCurrentTime(), my_data->getCurrentTimestep());
                         dataDescription->AddInput("input");
+
+
+                                        //pdf calculcation for specifc points only;
+                      const int nbins = 5;
+                      vtkFloatArray* bins = vtkFloatArray::New();
+                      vtkIntArray* hist = vtkIntArray::New();
+
+
+                      for ( int i =0; i<nii; i++){
+
+                        std::pair<int*, int*> minmax = std::minmax_element(pnt_values.begin()+(i*mpi_size), pnt_values.begin()+(i+1)*mpi_size );
+
+                        make_histogramm( idxOfInterest[i],     pnt_values[i*mpi_size],  *(minmax.first) ,  *(minmax.second), nbins,  bins ,  hist )
+
+
+                      }
+
+                  //      dataDescription->SetUserData();
+
 
 
                         // the last time step shuld always be output
@@ -342,8 +394,8 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
                         Processor->AddPipeline(pipeline);
 
                         // png etc script
-                        const std::string script_str = my_parameters->getParameter("catalystscript");
-                        const char *script_loc = script_str.c_str();
+                        const std::string script_str = "../pythonScripts/meanvarlive.py"; //my_parameters->getParameter("catalystscript");
+                        const char *script_loc = "../pythonScripts/meanvarlive.py"; //script_str.c_str();
 
                         if(script_str =="none")
                         {
@@ -388,5 +440,37 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
                                      int timestep_number) {
         PRINT_PARAM(timestep_number);
 }
+
+
+
+DLL_ADAPTOR_EXPORT void make_histogramm( const int& idx, const std:vector<double>& values, const double& min, const double& max, const int& nbins,  vtkFloatArray& bins , vtkIntArray& hist )
+{
+  const double delta = (max-min)/double(nbins);
+  bins->SetNumberOfComponents(1);
+  bins->SetNumberOfTuples(nbins);
+  bins->SetName( ("bins"+ std::string(idx)).c_str());
+
+  hist->SetNumberOfComponents(1);
+  hist->SetNumberOfTuples(nbins);
+  hist->SetName( ("hist"+ std::string(idx)).c_str());
+
+    for(int i =0; i< nbins; i++)
+    {
+      bins->SetValue(i, i*delta);
+    }
+
+
+    for(int i =0; i< values.size(); i++)
+    {
+          int idx = std::floor(values[i]/delta);
+          hist->SetValue(idx,  hist->GetValue(idx)+1 );
+    }
+
+
+}
+
+
+
+
 
 }//extern c

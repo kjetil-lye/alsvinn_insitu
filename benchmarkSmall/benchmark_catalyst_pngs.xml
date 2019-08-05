@@ -7,7 +7,7 @@
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 0</upperCorner>
-    <dimension>24 24 1</dimension>
+    <dimension>512 512 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
@@ -52,7 +52,7 @@
       <end_timestep_function>end_timestep</end_timestep_function>
       <endTime>2</endTime>
      <basename>kh</basename>
-      <catalystscript>../scripts/white.py</catalystscript>
+      <catalystscript>../scripts/rho_e_png_black.py</catalystscript>
       <numberOfSaves>40</numberOfSaves>
     </writer>
 </fvm>

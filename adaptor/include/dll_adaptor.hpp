@@ -4,6 +4,7 @@
 #pragma once
 #include <mpi.h>
 #include "dll_adaptor_exports.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -39,6 +40,11 @@ DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
 
 DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
                                      int timestep_number);
+
+ /*void make_histogramm( const int& idx,  double* values, const int& values_size,
+                                    const double& min, const double& max, const int& nbins,
+                                    vtkFloatArray* bins , vtkIntArray* hist);*/
+
 #ifdef __cplusplus
 }
 #endif

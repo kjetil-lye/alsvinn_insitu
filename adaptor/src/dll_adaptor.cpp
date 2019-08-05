@@ -13,18 +13,29 @@
 #include <vtkCPProcessor.h>
 #include <vtkCPPythonScriptPipeline.h>
 #include <vtkFloatArray.h>
-#include <vtkIntArray.h>
 #include <vtkDoubleArray.h>
+#include <vtkIntArray.h>
 #include <vtkImageData.h>
 #include <vtkNew.h>
 #include <vtkPointData.h>
 #include <vtkPoints.h>
 #include <vtkMPI.h>
+#include <iterator>
+
+
+
 
 
 // Simple macro to print parameters
 #define PRINT_PARAM(X) std::cout << "Value of " << #X << " is " << X << std::endl
 extern "C" {
+
+
+void make_histogramm( const int idx,  double* values, const int values_size,
+                      const double min, const double max, const int nbins,
+                      vtkFloatArray* bins, vtkIntArray* hist);
+
+
 
 vtkCPProcessor* Processor = NULL;
 vtkImageData* VTKGrid = NULL;
@@ -132,6 +143,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                           double by, double bz, int gpu_number ) {
 
 
+        bool HISTORGAM = true;
 
 //asuming only one variable: rho:
         if(std::string(variable_name)=="rho")
@@ -160,7 +172,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 }
 
                 // make nsamples per group, to use for normalzation:
-                        if(nsamples%mpi_size!=0) {
+                if(nsamples%mpi_size!=0) {
                         std::cerr<< "warning: nsmaples not divisible by mpi_size : "<< nsamples/mpi_size<<std::endl;
                 }
 
@@ -173,35 +185,32 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 double avrg_sqr_data[ndata];
 
 
+                //historgram calculcation for specifc points only;
+                const size_t nii = 2;
+                int idxOfInterest[nii] = { 30, 156};
 
-
-
-                  //collect data points from frames:
-                  const  size_t nii = 2;
-                  int idxOfInterest[nii] = { 30, 156};
-
-
-
+                //store all frame values for specifc points
                 double *pnt_values;
+                const int pnt_values_size = nii*nsamples;
 
                 if(mpi_rank ==0)
                 {
-                  pnt_values = (double*)malloc(sizeof(double) * (nii*mpi_size));
+                        pnt_values = (double*)malloc(sizeof(double) * (pnt_values_size));
                 }
 
-                for ( int i =0; i<nii; i++){
-                  int idx = idxOfInterest[i];
-                  MPI_Gather(variable_data+idx, 1,  MPI_DOUBLE,  pnt_values+(i*mpi_size), 1, MPI_DOUBLE, 0,  my_parameters->getMPIComm());
+                //collect data points from all frames:
+                for ( int i =0; i<nii; i++) {
+                          int idx = idxOfInterest[i];
+                          std::cout<< "rank, pt " << mpi_rank << " "<< idx<<" " <<*(variable_data+idx)<<std::endl;
+
+                        MPI_Gather(variable_data+idx, 1,  MPI_DOUBLE,  pnt_values+(i*nsamples), 1, MPI_DOUBLE, 0,  my_parameters->getMPIComm());
 
                 }
-
-
-
 
 
                 MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
 
-              double sqr_variable_data[ndata];
+                double sqr_variable_data[ndata];
                 //get squared sum to use for variance, reuse variable_data to save space
                 for (int i = 0; i< ndata; ++i) {
                         sqr_variable_data[i] = variable_data[i]*variable_data[i];
@@ -222,23 +231,24 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                         dataDescription->AddInput("input");
 
 
-                                        //pdf calculcation for specifc points only;
-                      const int nbins = 5;
-                      vtkFloatArray* bins = vtkFloatArray::New();
-                      vtkIntArray* hist = vtkIntArray::New();
+                        //historgram calculcation for specifc points only;
+                        const int nbins = 5;
 
 
-                      for ( int i =0; i<nii; i++){
-
-                        std::pair<int*, int*> minmax = std::minmax_element(pnt_values.begin()+(i*mpi_size), pnt_values.begin()+(i+1)*mpi_size );
-
-                        make_histogramm( idxOfInterest[i],     pnt_values[i*mpi_size],  *(minmax.first) ,  *(minmax.second), nbins,  bins ,  hist )
+                        for ( int i =0; i<nii; i++) {
+                              vtkFloatArray* bins = vtkFloatArray::New();
+                              vtkIntArray* hist = vtkIntArray::New();
 
 
-                      }
+                                //std::pair<int*, int*>
+                                auto minmax = std::minmax_element(pnt_values+(i*nsamples),pnt_values+(i+1)*nsamples );
+                                make_histogramm( idxOfInterest[i],  pnt_values+i*nsamples, pnt_values_size, *(minmax.first),  *(minmax.second), nbins,  bins,  hist );
 
-                  //      dataDescription->SetUserData();
 
+                                //      dataDescription->SetUserData();
+                              bins->Delete();
+                              hist->Delete();
+                        }
 
 
                         // the last time step shuld always be output
@@ -286,7 +296,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                                         index = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
                                                         double tmp = avrg_data[index]/double(norm_samples);
                                                         field_array_mean->SetValue(idx, tmp);
-                                                      //  tmp *=(avrg_data[index]/double(nsamples));
+                                                        //  tmp *=(avrg_data[index]/double(nsamples));
                                                         tmp =  avrg_sqr_data[index]/double(norm_samples) -tmp*tmp;
                                                         field_array_var->SetValue(idx, tmp);
                                                         idx += 1;
@@ -443,34 +453,53 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
 
 
 
-DLL_ADAPTOR_EXPORT void make_histogramm( const int& idx, const std:vector<double>& values, const double& min, const double& max, const int& nbins,  vtkFloatArray& bins , vtkIntArray& hist )
+void make_histogramm( const int idx,  double* values, const int values_size, const double min, const double max, const int nbins,  vtkFloatArray* bins, vtkIntArray* hist )
 {
-  const double delta = (max-min)/double(nbins);
-  bins->SetNumberOfComponents(1);
-  bins->SetNumberOfTuples(nbins);
-  bins->SetName( ("bins"+ std::string(idx)).c_str());
+        const double delta = (max-min)/double(nbins);
+        bins->SetNumberOfComponents(1);
+        bins->SetNumberOfTuples(nbins);
+        bins->SetName( ("bins"+ std::to_string(idx)).c_str());
 
-  hist->SetNumberOfComponents(1);
-  hist->SetNumberOfTuples(nbins);
-  hist->SetName( ("hist"+ std::string(idx)).c_str());
+        hist->SetNumberOfComponents(1);
+        hist->SetNumberOfTuples(nbins);
+        hist->SetName( ("hist"+ std::to_string(idx)).c_str());
+        for(int i =0; i< nbins; i++)
+        {
+                bins->SetValue(i, i*delta);
+                hist -> SetValue(i, 0);
+        }
 
-    for(int i =0; i< nbins; i++)
-    {
-      bins->SetValue(i, i*delta);
-    }
+        for(int i =0; i< values_size; i++)
+        {
+                int idx = std::floor((*(values+i)-min) /delta)-1;
 
 
-    for(int i =0; i< values.size(); i++)
-    {
-          int idx = std::floor(values[i]/delta);
-          hist->SetValue(idx,  hist->GetValue(idx)+1 );
-    }
+                std::cout<< " value : "<< *(values+i)<< " detal "<<delta<< " min: "<<min <<" max: "<<max << " divided : "<< (*(values+i)-min)/delta<< " idx "<< idx;
+                if(idx>nbins)
+                {
+                  idx = nbins;
+                }
+                int tmp = hist->GetValue(idx)+1;
+
+                std::cout << " tmp "<< tmp<<std::endl;
+                hist->SetValue(idx,  tmp);
+
+        }
+
+        for(int i =0; i< nbins; i++)
+        {
+              std::cout<< bins->GetValue(i) << " ";
+        }
+        std::cout<<std::endl;
+
+        for(int i =0; i< nbins; i++)
+        {
+              std::cout<< " " << hist->GetValue(i);
+        }
+        std::cout<<std::endl;
+
+
 
 
 }
-
-
-
-
-
-}//extern c
+}                                                                                                                                                                                                                                                    //extern c

@@ -7,11 +7,11 @@
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 0</upperCorner>
-    <dimension>8 8 1</dimension>
+    <dimension>128 128 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>1</endTime>
+  <endTime>2</endTime>
   <equation>euler2</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -20,8 +20,6 @@
   <cfl>auto</cfl>
   <integrator>auto</integrator>
   <functionals>
-
-
   </functionals>
   <initialData>
     <python>kelvinhelmholtz.py</python>
@@ -38,26 +36,13 @@
     <reconstruction>none</reconstruction>
   </diffusion>
   <writer>
-      <type>dll</type>
-      <library>adaptor/libdll_adaptor.so</library>
-      <create_function>create</create_function>
-      <delete_function>delete_data</delete_function>
-      <write_function>CatalystCoProcess</write_function>
-      <make_parameters_function>make_parameters</make_parameters_function>
-      <delete_parameters_function>delete_parameters</delete_parameters_function>
-      <needs_data_on_host_function>needs_data_on_host</needs_data_on_host_function>
-      <set_parameter_function>set_parameter</set_parameter_function>
-      <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
-      <new_timestep_function>new_timestep</new_timestep_function>
-      <end_timestep_function>end_timestep</end_timestep_function>
-      <endTime>1</endTime>
-      <basename>meanVar</basename>
-      <numberOfSaves>4</numberOfSaves>
-      <samples>3</samples>
-    </writer>
+    <type>netcdf</type>
+    <basename>none</basename>
+    <numberOfSaves>0</numberOfSaves>
+  </writer>
 </fvm>
 <uq>
-  <samples>4</samples>
+  <samples>1</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>
@@ -69,5 +54,4 @@
   <stats>
   </stats>
 </uq>
-
 </config>

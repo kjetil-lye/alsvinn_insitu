@@ -18,7 +18,7 @@
 #include <vtkPoints.h>
 #include <vtkMPI.h>
 
-
+#define PRINTL { int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank); std::cout << "In rank " << rank << ", at line: " <<__LINE__ << std::endl; }
 // Simple macro to print parameters
 #define PRINT_PARAM(X) std::cout << "Value of " << #X << " is " << X << std::endl
 extern "C" {
@@ -27,6 +27,10 @@ vtkCPProcessor* Processor = NULL;
 vtkImageData* VTKGrid = NULL;
 MPI_Comm coproc_comm;
 vtkMPICommunicatorOpaqueComm* Comm = NULL;
+
+bool data_initialized = false;
+bool parameters_initialized = false;
+bool comm_initialized = false;
 
 DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
                                 const char* simulator_version, void* parameters) {
@@ -91,6 +95,9 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
 
 
 DLL_ADAPTOR_EXPORT void delete_data(void* data) {
+
+  return ;
+
         std::cout << "In delete_data" << std::endl;
         if (Processor)
         {
@@ -257,6 +264,7 @@ DLL_ADAPTOR_EXPORT void* make_parameters() {
 
 
 DLL_ADAPTOR_EXPORT void delete_parameters(void* parameters) {
+  return;
         std::cout << "In delete_parameters" << std::endl;
         delete static_cast<MyParameters*>(parameters);
 }
@@ -278,6 +286,7 @@ DLL_ADAPTOR_EXPORT void set_parameter(void* parameters, const char* key,
 DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
                                      MPI_Comm communicator) {
 
+
         auto my_parameters = static_cast<MyParameters*>(parameters);
         PRINT_PARAM(communicator);
 
@@ -289,13 +298,17 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
 
         //create new communicator to use in CatalystCoProcess
 
-
+if(coproc_comm==NULL)
+{
         if(mpi_rank == 0)
         {
                 MPI_Comm_split(my_parameters->getMPIComm(), 0, mpi_rank, &coproc_comm);
         }else{
                 MPI_Comm_split(my_parameters->getMPIComm(), MPI_UNDEFINED, mpi_rank, &coproc_comm);
         }
+
+}
+
         //      my_parameters->setMPICPComm(coproc_comm);
 
 
@@ -313,7 +326,7 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
                 }
                 else
                 {
-                        Processor->RemoveAllPipelines();
+                      //  Processor->RemoveAllPipelines();
                 }
 
 
@@ -326,7 +339,7 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
                         Processor->AddPipeline(pipelinevtk);
 
                 }
-                else
+                else if(!comm_initialized)
                 {
                         //default script
                         const char *script_default = "../pythonScripts/gridwriter.py";
@@ -350,6 +363,8 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
                                 Processor->AddPipeline(pipeline);
                         }
 
+                        comm_initialized = true;
+
                 }
         }
 }
@@ -357,6 +372,8 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
 
 DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
                                      int timestep_number) {
+
+
         //  PRINT_PARAM(time);
         auto my_parameters = static_cast<MyParameters*>(parameters);
         int mpi_rank;

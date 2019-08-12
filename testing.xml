@@ -11,7 +11,7 @@
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>1</endTime>
+  <endTime>2</endTime>
   <equation>euler2</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -52,8 +52,8 @@
       <end_timestep_function>end_timestep</end_timestep_function>
       <endTime>1</endTime>
       <basename>meanVar</basename>
-      <numberOfSaves>4</numberOfSaves>
-      <samples>3</samples>
+      <numberOfSaves>10</numberOfSaves>
+      <samples>18</samples>
     </writer>
 </fvm>
 <uq>

@@ -96,8 +96,6 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
 
 DLL_ADAPTOR_EXPORT void delete_data(void* data) {
 
-  return ;
-
         std::cout << "In delete_data" << std::endl;
         if (Processor)
         {
@@ -264,7 +262,7 @@ DLL_ADAPTOR_EXPORT void* make_parameters() {
 
 
 DLL_ADAPTOR_EXPORT void delete_parameters(void* parameters) {
-  return;
+
         std::cout << "In delete_parameters" << std::endl;
         delete static_cast<MyParameters*>(parameters);
 }

@@ -6,12 +6,12 @@
   <platform>cpu</platform>
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
-    <upperCorner>1 1 0</upperCorner>
-    <dimension>8 8 1</dimension>
+    <upperCorner>1 1 1</upperCorner>
+    <dimension>16 16 16</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>2</endTime>
+  <endTime>1</endTime>
   <equation>euler2</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -24,7 +24,7 @@
 
   </functionals>
   <initialData>
-    <python>kelvinhelmholtz.py</python>
+    <python>kelvinhelmholtz_3d_tube.py</python>
     <parameters>
       <parameter>
         <name>a</name>
@@ -53,11 +53,10 @@
       <endTime>1</endTime>
       <basename>meanVar</basename>
       <numberOfSaves>10</numberOfSaves>
-      <samples>18</samples>
     </writer>
 </fvm>
 <uq>
-  <samples>4</samples>
+  <samples>3</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>

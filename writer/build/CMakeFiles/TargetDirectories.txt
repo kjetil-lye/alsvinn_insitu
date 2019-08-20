@@ -1,8 +1,0 @@
-/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/writer/build/CMakeFiles/rebuild_cache.dir
-/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/writer/build/CMakeFiles/edit_cache.dir
-/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/writer/build/writer/CMakeFiles/rebuild_cache.dir
-/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/writer/build/writer/CMakeFiles/dll_writer.dir
-/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/writer/build/writer/CMakeFiles/edit_cache.dir
-/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/writer/build/standalone/CMakeFiles/rebuild_cache.dir
-/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/writer/build/standalone/CMakeFiles/standalone.dir
-/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/writer/build/standalone/CMakeFiles/edit_cache.dir

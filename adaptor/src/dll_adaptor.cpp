@@ -6,22 +6,34 @@
 #include <fstream>
 #include <limits>
 #include <iomanip>
+#include <algorithm>
 #include <iostream>
 #include <vtkCPDataDescription.h>
 #include <vtkCPInputDataDescription.h>
 #include <vtkCPProcessor.h>
 #include <vtkCPPythonScriptPipeline.h>
+#include <vtkFloatArray.h>
 #include <vtkDoubleArray.h>
+#include <vtkIntArray.h>
 #include <vtkImageData.h>
 #include <vtkNew.h>
 #include <vtkPointData.h>
 #include <vtkPoints.h>
 #include <vtkMPI.h>
+#include <iterator>
+
+
+
 
 #define PRINTL { int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank); std::cout << "In rank " << rank << ", at line: " <<__LINE__ << std::endl; }
 // Simple macro to print parameters
 #define PRINT_PARAM(X) std::cout << "Value of " << #X << " is " << X << std::endl
 extern "C" {
+
+
+void make_histogramm( const int idx,  double* values, const int values_size,
+                      const double min, const double max, const int nbins,
+                      vtkFloatArray* bins, vtkIntArray* hist);
 
 vtkCPProcessor* Processor = NULL;
 vtkImageData* VTKGrid = NULL;
@@ -40,54 +52,6 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
         auto my_parameters = static_cast<MyParameters*>(parameters);
 
         const std::string version = my_parameters->getParameter("basename");
-        // Initialize catalyst, set processes
-        /*    if (Processor == NULL)
-            {
-                    Processor = vtkCPProcessor::New();
-              //      Comm = new vtkMPICommunicatorOpaqueComm( my_parameters->getMPICommPtr() );
-                    Processor->Initialize();
-            }
-            else
-            {
-                    Processor->RemoveAllPipelines();
-            }
-
-
-            if(false) //version=="meanVar")
-            {
-                    int outputFrequency=1;
-                    std::string name = "out";
-                    vtkNew<isosurfaceVtkPipeline> pipelinevtk;
-                    pipelinevtk->Initialize(outputFrequency, name);
-                    Processor->AddPipeline(pipelinevtk);
-
-            }
-            else
-            {
-                    //default script
-                    const char *script_default = "../pythonScripts/gridwriter.py";
-
-                    vtkNew<vtkCPPythonScriptPipeline> pipeline;
-                    pipeline->Initialize(script_default);
-                    Processor->AddPipeline(pipeline);
-
-                    // png etc script
-                    const std::string script_str = my_parameters->getParameter("catalystscript");
-                    const char *script_loc = script_str.c_str();
-
-                    if(script_str =="none")
-                    {
-                            std::cout<<"only default pipeline script: "<< script_default<<std::endl;
-                    }
-                    else
-                    {
-                            std::cout<<"pipeline script: "<< script_loc<<std::endl;
-                            pipeline->Initialize(script_loc);
-                            Processor->AddPipeline(pipeline);
-                    }
-
-            }
-         */
 
         return static_cast<void*>(new MyData);
 
@@ -134,23 +98,14 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                           double by, double bz, int gpu_number ) {
 
 
+        bool HISTORGAM = true;
 
 //asuming only one variable: rho:
         if(std::string(variable_name)=="rho")
         {
 
                 auto my_parameters = static_cast<MyParameters*>(parameters);
-                //  auto timeStep = my_data->getCurrentTimestep();
-                //    const std::string description_namestr = my_parameters->getParameter("basename");        const char *description_name = description_namestr.c_str();
-                /*    int mpi_init;
-                    MPI_Initialized(&mpi_init);
-                    if(mpi_init){
-                      std::cerr<< "MPI has been initialized"<<std::endl;
-                      std::cerr<< "using Comm : "<< my_parameters->getMPIComm() <<std::endl;
-                      }else{
-                         std::cerr<< "MPI has"<<"NOT"<<" been Initialized"<<std::endl;
-                       }
-                 */
+
                 int mpi_rank;
                 MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
                 int mpi_size;
@@ -161,23 +116,54 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                         std::cerr<< "warning: not enough mpi nodes,  reduce sample size to number of mpi nodes: "<< mpi_size<<std::endl;
                 }
 
+                // make nsamples per group, to use for normalzation:
+                if(nsamples%mpi_size!=0) {
+                        std::cerr<< "warning: nsmaples not divisible by mpi_size : "<< nsamples/mpi_size<<std::endl;
+                }
 
-
-
+                int norm_samples = nsamples/mpi_size;
                 const size_t ndata = (ngx*2+nx)*(ny+2*ngy)*(nz+2*ngz);
                 double avrg_data[ndata];
                 double avrg_sqr_data[ndata];
 
+
+
+                //historgram calculcation for specifc points only;
+                const size_t nii = 2;
+                int idxOfInterest[nii] = { 30, 156};
+                double *pnt_values;
+                const int pnt_values_size = nii*nsamples;
+
+                if(HISTORGAM)
+                {
+                        if(mpi_rank ==0)
+                        {
+                                pnt_values = (double*)malloc(sizeof(double) * (pnt_values_size));
+                        }
+
+                        //collect data points from all frames to store all frame values for specifc points
+                        for ( int i =0; i<nii; i++)
+                        {
+                                int idx = idxOfInterest[i];
+                                std::cout<< "rank, pt " << mpi_rank << " "<< idx<<" " <<*(variable_data+idx)<<std::endl;
+                                MPI_Gather(variable_data+idx, 1,  MPI_DOUBLE,  pnt_values+(i*nsamples), 1, MPI_DOUBLE, 0,  my_parameters->getMPIComm());
+                        }
+                }
+
+
                 MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
 
                 double sqr_variable_data[ndata];
-                //get squared sum to use for variance,
+                //get squared sum to use for variance, reuse variable_data to save space
                 for (int i = 0; i< ndata; ++i) {
                         sqr_variable_data[i] = variable_data[i]*variable_data[i];
                 }
 
 
                 MPI_Reduce(&sqr_variable_data, avrg_sqr_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
+
+
+
 
                 if(mpi_rank == 0)
                 {
@@ -187,6 +173,28 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                         dataDescription->SetTimeData(my_data->getCurrentTime(), my_data->getCurrentTimestep());
                         dataDescription->AddInput("input");
 
+                        if(HISTORGAM)
+                        {
+                                //historgram calculcation for specifc points only;
+                                const int nbins = 5;
+                                vtkFloatArray* bins = vtkFloatArray::New();
+                                vtkIntArray* hist = vtkIntArray::New();
+
+
+                                for ( int i =0; i<nii; i++) {
+
+
+                                        //std::pair<int*, int*>
+                                        auto minmax = std::minmax_element(pnt_values+(i*nsamples),pnt_values+(i+1)*nsamples );
+                                        make_histogramm( idxOfInterest[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second), nbins,  bins,  hist );
+
+                                        //      dataDescription->SetUserData();
+                                        //TODO send historgram to paraview forr all points, e.g. put into blanked out grid
+
+                                }
+                                hist->Delete();
+                                bins->Delete();
+                        }
 
                         // the last time step shuld always be output
                         //either we are looking at new variable or new timestep or the last time step
@@ -231,10 +239,10 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                                 // ignoring ghost cells (ngx is number of ghost cells in x direction)
                                                 for (int x = ngx; x < nx + ngx; ++x) {
                                                         index = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
-                                                        double tmp = avrg_data[index]/double(nsamples);
+                                                        double tmp = avrg_data[index]/double(norm_samples);
                                                         field_array_mean->SetValue(idx, tmp);
-                                                        tmp *=(avrg_data[index]/double(nsamples));
-                                                        tmp =  avrg_sqr_data[index]/double(nsamples) -tmp;
+                                                        //  tmp *=(avrg_data[index]/double(nsamples));
+                                                        tmp =  avrg_sqr_data[index]/double(norm_samples) -tmp*tmp;
                                                         field_array_var->SetValue(idx, tmp);
                                                         idx += 1;
                                                 }
@@ -248,6 +256,9 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                 field_array_var->Delete();
                                 Processor->CoProcess(dataDescription);
                         }//end RequestDataDescription
+
+                        free(pnt_values);
+
                         dataDescription->Delete();
                         my_data->setNewTimestep(false);
                 }//end rank 0
@@ -347,8 +358,8 @@ if(coproc_comm==NULL)
                         Processor->AddPipeline(pipeline);
 
                         // png etc script
-                        const std::string script_str = my_parameters->getParameter("catalystscript");
-                        const char *script_loc = script_str.c_str();
+                        const std::string script_str = "../pythonScripts/meanvarlive.py"; //my_parameters->getParameter("catalystscript");
+                        const char *script_loc = "../pythonScripts/meanvarlive.py"; //script_str.c_str();
 
                         if(script_str =="none")
                         {
@@ -398,4 +409,44 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
         PRINT_PARAM(timestep_number);
 }
 
-}//extern c
+
+
+void make_histogramm( const int idx,  double* values, const int values_size, const double min, const double max, const int nbins,  vtkFloatArray* bins, vtkIntArray* hist )
+{
+        const double delta = (max-min)/double(nbins-1);
+        bins->SetNumberOfComponents(1);
+        bins->SetNumberOfTuples(nbins);
+        bins->SetName( ("bins"+ std::to_string(idx)).c_str());
+
+        hist->SetNumberOfComponents(1);
+        hist->SetNumberOfTuples(nbins);
+        hist->SetName( ("hist"+ std::to_string(idx)).c_str());
+        for(int i =0; i< nbins; i++)
+        {
+                bins->SetValue(i, i*delta);
+                hist->SetValue(i, 0);
+        }
+
+        for(int i =0; i< values_size; i++)
+        {
+                int idx = std::floor((*(values+i)-min) /delta);
+                int tmp = hist->GetValue(idx)+1;
+                hist->SetValue(idx,  tmp);
+                //    std::cout<< " value : "<< *(values+i)<< " detal "<<delta<< " min: "<<min <<" max: "<<max << " divided : "<< (*(values+i)-min)/delta<< " idx "<< idx;
+        }
+
+        for(int i =0; i< nbins; i++)
+        {
+                std::cout<< bins->GetValue(i) << " ";
+        }
+        std::cout<<std::endl;
+
+        for(int i =0; i< nbins; i++)
+        {
+                std::cout<< " " << hist->GetValue(i);
+        }
+        std::cout<<std::endl;
+
+}//end_make_histogramm
+
+}                                                                                                                                                                                                                                                    //extern c

@@ -1,6 +1,5 @@
-
 import numpy as np
- 
+
 def init_global(rho, ux, uy, uz, p, nx, ny, nz, ax, ay, az, bx, by, bz):
     N = int(len(a)/6)
     a1 = a[:N]

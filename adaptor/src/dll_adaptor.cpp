@@ -23,7 +23,7 @@
 #include <iterator>
 
 
-
+#define USE_MPI_ON = 1
 
 #define PRINTL { int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank); std::cout << "In rank " << rank << ", at line: " <<__LINE__ << std::endl; }
 // Simple macro to print parameters
@@ -34,6 +34,8 @@ extern "C" {
 void make_histogramm( const int idx,  double* values, const int values_size,
                       const double min, const double max, const int nbins,
                       vtkFloatArray* bins, vtkIntArray* hist);
+
+
 
 vtkCPProcessor* Processor = NULL;
 vtkImageData* VTKGrid = NULL;
@@ -46,8 +48,6 @@ bool comm_initialized = false;
 
 DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
                                 const char* simulator_version, void* parameters) {
-
-
 
         auto my_parameters = static_cast<MyParameters*>(parameters);
 
@@ -98,7 +98,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                           double by, double bz, int gpu_number ) {
 
 
-        bool HISTORGAM = true;
+        bool HISTORGAM = false;
 
 //asuming only one variable: rho:
         if(std::string(variable_name)=="rho")
@@ -121,7 +121,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                         std::cerr<< "warning: nsmaples not divisible by mpi_size : "<< nsamples/mpi_size<<std::endl;
                 }
 
-                int norm_samples = nsamples/mpi_size;
+                int norm_samples = nsamples;
                 const size_t ndata = (ngx*2+nx)*(ny+2*ngy)*(nz+2*ngz);
                 double avrg_data[ndata];
                 double avrg_sqr_data[ndata];
@@ -183,14 +183,12 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
 
                                 for ( int i =0; i<nii; i++) {
 
-
                                         //std::pair<int*, int*>
                                         auto minmax = std::minmax_element(pnt_values+(i*nsamples),pnt_values+(i+1)*nsamples );
                                         make_histogramm( idxOfInterest[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second), nbins,  bins,  hist );
 
                                         //      dataDescription->SetUserData();
                                         //TODO send historgram to paraview forr all points, e.g. put into blanked out grid
-
                                 }
                                 hist->Delete();
                                 bins->Delete();
@@ -295,7 +293,6 @@ DLL_ADAPTOR_EXPORT void set_parameter(void* parameters, const char* key,
 DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
                                      MPI_Comm communicator) {
 
-
         auto my_parameters = static_cast<MyParameters*>(parameters);
         PRINT_PARAM(communicator);
 
@@ -335,11 +332,11 @@ if(coproc_comm==NULL)
                 }
                 else
                 {
-                      //  Processor->RemoveAllPipelines();
+                        Processor->RemoveAllPipelines();
                 }
 
 
-                if(false) //version=="meanVar")
+                if(false) //if used with vtkCPProcessor
                 {
                         int outputFrequency=1;
                         std::string name = "out";
@@ -358,8 +355,8 @@ if(coproc_comm==NULL)
                         Processor->AddPipeline(pipeline);
 
                         // png etc script
-                        const std::string script_str = "../pythonScripts/meanvarlive.py"; //my_parameters->getParameter("catalystscript");
-                        const char *script_loc = "../pythonScripts/meanvarlive.py"; //script_str.c_str();
+                        const std::string script_str = my_parameters->getParameter("catalystscript");
+                        const char *script_loc = script_str.c_str();
 
                         if(script_str =="none")
                         {

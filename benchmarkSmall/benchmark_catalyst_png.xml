@@ -1,22 +1,22 @@
 <config>
 <fvm>
   <name>
-    kh3d
+    kh
   </name>
   <platform>cpu</platform>
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
-    <upperCorner>1 1 1</upperCorner>
-    <dimension>16 16 16</dimension>
+    <upperCorner>1 1 0</upperCorner>
+    <dimension>32 32 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>0.2</endTime>
-  <equation>euler3</equation>
+  <endTime>2</endTime>
+  <equation>euler2</equation>
   <equationParameters>
     <gamma>1.4</gamma>
   </equationParameters>
-  <reconstruction>none</reconstruction>
+  <reconstruction>weno2</reconstruction>
   <cfl>auto</cfl>
   <integrator>auto</integrator>
   <functionals>
@@ -24,11 +24,11 @@
 
   </functionals>
   <initialData>
-    <python>kelvinhelmholtz_3d_tube.py</python>
+    <python>kelvinhelmholtz.py</python>
     <parameters>
       <parameter>
         <name>a</name>
-        <length>60</length>
+        <length>40</length>
         <values><value>0</value></values>
       </parameter>
     </parameters>
@@ -50,11 +50,11 @@
       <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
-      <endTime>1</endTime>
+      <endTime>2</endTime>
       <basename>meanVar</basename>
-        <samples>3</samples>
-      <catalystscript>../pythonScripts/meanvar_both3d.py</catalystscript>
-      <numberOfSaves>2</numberOfSaves>
+      <numberOfSaves>10</numberOfSaves>
+      <samples>3</samples>
+    <catalystscript>../pythonScripts/rho_e.py</catalystscript>
     </writer>
 </fvm>
 <uq>

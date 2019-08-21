@@ -36,7 +36,7 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
                                           int ngx, int ngy, int ngz, double ax, double ay, double az, double bx,
                                           double by, double bz, int gpu_number );
 
-void make_histogramm(const char* variable_name, const int pntidx,  double* values, const int values_size,
+void make_histogram(const char* variable_name, const int pntidx,  double* values, const int values_size,
                       const double min, const double max, const int nbins,
                       vtkFloatArray* bins, vtkIntArray* hist);
 
@@ -351,7 +351,7 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
 
 
 
-void make_histogramm( const char* variable_name, const int pntidx,  double* values, const int values_size, const double min, const double max, const int nbins,  vtkFloatArray* bins, vtkIntArray* hist )
+void make_histogram( const char* variable_name, const int pntidx,  double* values, const int values_size, const double min, const double max, const int nbins,  vtkFloatArray* bins, vtkIntArray* hist )
 {
         const double delta = (max-min)/double(nbins-1);
         bins->SetNumberOfComponents(1);
@@ -388,7 +388,7 @@ void make_histogramm( const char* variable_name, const int pntidx,  double* valu
         }
         std::cout<<std::endl;
 
-}//end_make_histogramm
+}//end_make_histogram
 
 void CatalystCoProcesHistogram(void* data, void* parameters, double time,
                                           const char* variable_name,  double* variable_data, int nx, int ny, int nz,
@@ -476,7 +476,7 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
                                   for ( int i =0; i<nii; i++) {
                                           //std::pair<int*, int*>
                                           auto minmax = std::minmax_element(pnt_values+(i*nsamples),pnt_values+(i+1)*nsamples );
-                                          make_histogramm( variable_name, idxOfInterest[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second), nbins,  bins,  hist );
+                                          make_histogram( variable_name, idxOfInterest[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second), nbins,  bins,  hist );
 
                                           //      dataDescription->SetUserData();
                                           //TODO send historgram to paraview forr all points, e.g. put into blanked out grid

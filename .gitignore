@@ -32,7 +32,7 @@
 *.app
 
 #all datafiles
-data/*
+
 *.nc
 *.png
 *.avi
@@ -41,4 +41,3 @@ data/*
 build/*
 build*/*
 !build/writer/dll_writer_exports.h
-

@@ -11,7 +11,7 @@
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>0.5</endTime>
+  <endTime>0.2</endTime>
   <equation>euler3</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -50,11 +50,11 @@
       <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
-      <endTime>0.5</endTime>
-      <basename>meanVar</basename>
+      <endTime>0.2</endTime>
+      <basename>none</basename>
         <samples>3</samples>
-      <catalystscript>../pythonScripts/meanvar_both3d.py</catalystscript>
-      <numberOfSaves>5</numberOfSaves>
+      <catalystscript>../pythonScripts/generic3d.py</catalystscript>
+      <numberOfSaves>2</numberOfSaves>
     </writer>
 </fvm>
 <uq>

@@ -297,16 +297,17 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
                         const char *script_default = "../pythonScripts/gridwriter.py";
 
                         vtkNew<vtkCPPythonScriptPipeline> pipeline;
-                        pipeline->Initialize(script_default);
-                        Processor->AddPipeline(pipeline);
+
 
                         // png etc script
                         const std::string script_str = my_parameters->getParameter("catalystscript");
                         const char *script_loc = script_str.c_str();
 
-                        if(true) //script_str =="none")
+                        if(script_str =="none")
                         {
                                 std::cout<<"only default pipeline script: "<< script_default<<std::endl;
+                                pipeline->Initialize(script_default);
+                                Processor->AddPipeline(pipeline);
                         }
                         else
                         {

@@ -32,13 +32,18 @@ void setMPIComm(MPI_Comm comm) {
 }
 
 
-MPI_Comm getMPIComm(MPI_Comm comm) {
-        return comm;
+MPI_Comm getMPIComm() {
+        return mpiComm;
 }
+MPI_Comm* getMPICommPtr() {
+        return &mpiComm;
+}
+
 
 private:
 std::map<std::string, std::string> parameters;
 
 MPI_Comm mpiComm;
+
 
 };

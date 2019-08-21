@@ -1,7 +1,7 @@
 <config>
 <fvm>
   <name>
-    kh
+    kh3d
   </name>
   <platform>cpu</platform>
   <grid>
@@ -11,12 +11,12 @@
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>2</endTime>
-  <equation>euler2</equation>
+  <endTime>0.5</endTime>
+  <equation>euler3</equation>
   <equationParameters>
     <gamma>1.4</gamma>
   </equationParameters>
-  <reconstruction>weno2</reconstruction>
+  <reconstruction>none</reconstruction>
   <cfl>auto</cfl>
   <integrator>auto</integrator>
   <functionals>
@@ -24,11 +24,11 @@
 
   </functionals>
   <initialData>
-    <python>kelvinhelmholtz.py</python>
+    <python>kelvinhelmholtz_3d_tube.py</python>
     <parameters>
       <parameter>
         <name>a</name>
-        <length>40</length>
+        <length>60</length>
         <values><value>0</value></values>
       </parameter>
     </parameters>
@@ -50,13 +50,15 @@
       <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
-      <endTime>2</endTime>
+      <endTime>0.5</endTime>
       <basename>meanVar</basename>
-      <numberOfSaves>40</numberOfSaves>
+        <samples>3</samples>
+      <catalystscript>../pythonScripts/meanvar_both3d.py</catalystscript>
+      <numberOfSaves>5</numberOfSaves>
     </writer>
 </fvm>
 <uq>
-  <samples>0</samples>
+  <samples>3</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>

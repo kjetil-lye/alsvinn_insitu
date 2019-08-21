@@ -6,8 +6,8 @@
   <platform>cpu</platform>
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
-    <upperCorner>1 1 1</upperCorner>
-    <dimension>16 16 16</dimension>
+    <upperCorner>1 1 0</upperCorner>
+    <dimension>2048 2048 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
@@ -20,8 +20,6 @@
   <cfl>auto</cfl>
   <integrator>auto</integrator>
   <functionals>
-
-
   </functionals>
   <initialData>
     <python>kelvinhelmholtz.py</python>
@@ -51,12 +49,12 @@
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
       <endTime>2</endTime>
-      <basename>meanVar</basename>
+      <basename>none</basename>
       <numberOfSaves>40</numberOfSaves>
     </writer>
 </fvm>
 <uq>
-  <samples>0</samples>
+  <samples>1</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>

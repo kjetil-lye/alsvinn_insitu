@@ -6,8 +6,8 @@
   <platform>cpu</platform>
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
-    <upperCorner>1 1 1</upperCorner>
-    <dimension>16 16 16</dimension>
+    <upperCorner>1 1 0</upperCorner>
+    <dimension>32 32 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
@@ -52,11 +52,13 @@
       <end_timestep_function>end_timestep</end_timestep_function>
       <endTime>2</endTime>
       <basename>meanVar</basename>
-      <numberOfSaves>40</numberOfSaves>
+      <numberOfSaves>10</numberOfSaves>
+      <samples>3</samples>
+    <catalystscript>../pythonScripts/rho_e.py</catalystscript>
     </writer>
 </fvm>
 <uq>
-  <samples>0</samples>
+  <samples>3</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>

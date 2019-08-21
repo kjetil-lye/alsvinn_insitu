@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/standalone.dir/src/standalone.cpp.o  -o standalone -Wl,-rpath,/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu/writer/build/writer:/usr/lib/x86_64-linux-gnu/openmpi/lib ../writer/libdll_writer.so /usr/lib/x86_64-linux-gnu/libnetcdf.so -pthread /usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi.so 

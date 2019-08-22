@@ -153,7 +153,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
 
                         // the last time step shuld always be output
                         //either we are looking at new variable or new timestep or the last time step
-                        if( my_data->isNewVariable(variable_name) || my_data->isNewTimestep() || my_data->isEndTimestep() ) {
+                        if( my_data->isNewVariable(variable_name) &&(my_data->isNewTimestep() || my_data->isEndTimestep()) ) { //my_data->isNewVariable(variable_name) ||
                                 dataDescription->ForceOutputOn();
                         }
 

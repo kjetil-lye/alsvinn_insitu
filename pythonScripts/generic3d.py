@@ -57,7 +57,8 @@ def CreateCoProcessor():
           fieldname =  fields[ifield][0]
           print(fieldname)
 
-          pixelw,pixelh = getImageSize(64,64,64)
+         # pixelw,pixelh = getImageSize(64,64,64)
+          pixelw,pixelh = 1600,900
 
           #### disable automatic camera reset on 'Show'
           paraview.simple._DisableFirstRenderCameraReset()

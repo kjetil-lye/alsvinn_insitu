@@ -44,7 +44,7 @@ vtkCPProcessor* Processor = NULL;
 vtkImageData* VTKGrid = NULL;
 MPI_Comm coproc_comm;
 vtkMPICommunicatorOpaqueComm* Comm = NULL;
-
+vtkCPDataDescription*  dataDescription = NULL ; //vtkCPDataDescription::New();
 
 DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
                                 const char* simulator_version, void* parameters) {
@@ -106,11 +106,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
         else
         {
 
-//asuming only one variable: rho:
-        if(true ) //std::string(variable_name)=="rho")
-        {
-
-                auto my_parameters = static_cast<MyParameters*>(parameters);
+              auto my_parameters = static_cast<MyParameters*>(parameters);
 
                 int mpi_rank;
                 MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
@@ -147,20 +143,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 {
                         auto my_data = static_cast<MyData*>(data);
 
-                        vtkCPDataDescription*  dataDescription = vtkCPDataDescription::New();
-                        dataDescription->SetTimeData(my_data->getCurrentTime(), my_data->getCurrentTimestep());
-                        dataDescription->AddInput("input");
-
-                        // the last time step shuld always be output
-                        //either we are looking at new variable or new timestep or the last time step
-                        if( my_data->isNewVariable(variable_name) &&(my_data->isNewTimestep() || my_data->isEndTimestep()) ) { //my_data->isNewVariable(variable_name) ||
-                                dataDescription->ForceOutputOn();
-                        }
-
-
-                        if(Processor->RequestDataDescription(dataDescription)!=0 )
-                        {
-                                int extend[6]  = {0,nx-1,0,ny-1,0,nz-1};//{ngx, nx+ngx, ngy, ny+ngy, ngz, 0}; //nz+ngz };
+                              int extend[6]  = {0,nx-1,0,ny-1,0,nz-1};//{ngx, nx+ngx, ngy, ny+ngy, ngz, 0}; //nz+ngz };
 
                                 if (VTKGrid == NULL)
                                 {
@@ -206,15 +189,9 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                 VTKGrid->GetPointData()->AddArray(field_array_var);
                                 field_array_mean->Delete();
                                 field_array_var->Delete();
-                                Processor->CoProcess(dataDescription);
-                        }//end RequestDataDescription
-
-                        dataDescription->Delete();
-                        my_data->setNewTimestep(false);
                 }//end rank 0
-        }//endif rho
-      }//endif(ADAPTOR_HISTORGAM)
 
+      }//endif(ADAPTOR_HISTORGAM)
 }
 
 
@@ -324,7 +301,6 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
 DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
                                      int timestep_number) {
 
-        //  PRINT_PARAM(time);
         auto my_parameters = static_cast<MyParameters*>(parameters);
         int mpi_rank;
         MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
@@ -340,6 +316,9 @@ DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
                 if(time >= std::stoi(my_parameters->getParameter("endTime"))) {
                         my_data->setEndTimeStep(true);
                 }
+                dataDescription = vtkCPDataDescription::New();
+                dataDescription->SetTimeData(my_data->getCurrentTime(), my_data->getCurrentTimestep());
+                dataDescription->AddInput("input");
         }
 
 }
@@ -347,7 +326,21 @@ DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
 
 DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
                                      int timestep_number) {
-        PRINT_PARAM(timestep_number);
+
+        auto my_parameters = static_cast<MyParameters*>(parameters);
+        int mpi_rank;
+        MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
+
+        if(mpi_rank==0)
+        {
+          dataDescription->ForceOutputOn();
+          if(Processor->RequestDataDescription(dataDescription)!=0 )
+          {
+            Processor->CoProcess(dataDescription);
+          }
+          dataDescription->Delete();
+        }
+
 }
 
 
@@ -397,12 +390,7 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
                                           double by, double bz, int gpu_number )
 
 {
-
-  //asuming only one variable: rho:
-          if(std::string(variable_name)=="rho")
-          {
-
-                  auto my_parameters = static_cast<MyParameters*>(parameters);
+                 auto my_parameters = static_cast<MyParameters*>(parameters);
 
                   int mpi_rank;
                   MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
@@ -463,10 +451,6 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
                   {
                           auto my_data = static_cast<MyData*>(data);
 
-                          vtkCPDataDescription*  dataDescription = vtkCPDataDescription::New();
-                          dataDescription->SetTimeData(my_data->getCurrentTime(), my_data->getCurrentTimestep());
-                          dataDescription->AddInput("input");
-
 
                                   //historgram calculcation for specifc points only;
                                   const int nbins = 5;
@@ -485,16 +469,6 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
                                   hist->Delete();
                                   bins->Delete();
 
-
-                          // the last time step shuld always be output
-                          //either we are looking at new variable or new timestep or the last time step
-                          if( my_data->isNewVariable(variable_name) || my_data->isNewTimestep() || my_data->isEndTimestep() ) {
-                                  dataDescription->ForceOutputOn();
-                          }
-
-
-                          if(Processor->RequestDataDescription(dataDescription)!=0 )
-                          {
                                   int extend[6]  = {0,nx-1,0,ny-1,0,nz-1};//{ngx, nx+ngx, ngy, ny+ngy, ngz, 0}; //nz+ngz };
 
                                   if (VTKGrid == NULL)
@@ -541,18 +515,9 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
                                   VTKGrid->GetPointData()->AddArray(field_array_var);
                                   field_array_mean->Delete();
                                   field_array_var->Delete();
-                                  Processor->CoProcess(dataDescription);
-                          }//end RequestDataDescription
-
                           free(pnt_values);
-                          dataDescription->Delete();
-                          my_data->setNewTimestep(false);
                   }//end rank 0
-          }//endif rho
-
-
-
-}
+    } //CatalystCoProcesHistogram
 
 
 

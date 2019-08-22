@@ -25,7 +25,7 @@ from paraview import coprocessing
 outputfrequency= 1
 
 
-#define outputs here:
+    # =================================OUTPUT DEFINITIONS================================
 def getFields():
     return [['E_mean', 0], ['E_var', 0], ['mx_mean', 0], ['mx_var', 0], ['my_mean', 0], ['my_var', 0], ['mz_mean', 0], ['mz_var', 0], ['rho_mean', 0], ['rho_var', 0]]
 
@@ -40,6 +40,55 @@ def getImageSize(nx,nz,ny):
     return w,h
 
 
+def getRGBPoints(vname):
+    #same order as getFields()
+  tablergb = {}
+  tablergb['E_mean']=[6.384373773961045, 0.231373, 0.298039, 0.752941, 6.397468058702769, 0.865003, 0.865003, 0.865003, 6.410562343444494, 0.705882, 0.0156863, 0.14902]
+  tablergb['rho_var'] = [7.327471962526033e-15, 0.231373, 0.298039, 0.752941, 0.05300996129263258, 0.865003, 0.865003, 0.865003, 0.10601992258525783, 0.705882, 0.0156863, 0.14902]
+  tablergb['E_var'] = [3.126388037344441e-13, 0.231373, 0.298039, 0.752941, 1.183453138509094e-05, 0.865003, 0.865003, 0.865003, 2.3669062457543077e-05, 0.705882, 0.0156863, 0.14902]
+  tablergb['mx_mean']=[0.1966843694485616, 0.231373, 0.298039, 0.752941, 0.27797292425157505, 0.865003, 0.865003, 0.865003, 0.35926147905458855, 0.705882, 0.0156863, 0.14902]
+
+  tablergb['mx_var']=[1.8304802118507268e-13, 0.231373, 0.298039, 0.752941, 0.0018752632407424905, 0.865003, 0.865003, 0.865003, 0.003750526481301933, 0.705882, 0.0156863, 0.14902]
+
+  tablergb['my_mean']=[-0.0005318617114623177, 0.231373, 0.298039, 0.752941, -2.9579154056703005e-05, 0.865003, 0.865003, 0.865003, 0.00047270340334891166, 0.705882, 0.0156863, 0.14902]
+
+  tablergb['my_var']=[3.792124236755382e-15, 0.231373, 0.298039, 0.752941, 9.817798570548125e-08, 0.865003, 0.865003, 0.865003, 1.9635596761883828e-07, 0.705882, 0.0156863, 0.14902]
+
+  tablergb['mz_mean']=[-0.0003734129861518945, 0.231373, 0.298039, 0.752941, 5.109169672523427e-05, 0.865003, 0.865003, 0.865003, 0.00047559637960236306, 0.705882, 0.0156863, 0.14902]
+
+  tablergb['mz_var']=[5.744363760126085e-16, 0.231373, 0.298039, 0.752941, 6.663907762671332e-08, 0.865003, 0.865003, 0.865003, 1.3327815467899028e-07, 0.705882, 0.0156863, 0.14902]
+
+  tablergb['rho_mean']=[1.0016140251131045, 0.231373, 0.298039, 0.752941, 1.4894833747421563, 0.865003, 0.865003, 0.865003, 1.9773527243712083, 0.705882, 0.0156863, 0.14902]
+
+  return tablergb[vname]
+
+
+
+def getPWFPoints(vname):
+    tablepwf = {}
+    tablepwf['E_mean'] =[6.384373773961045, 0.0, 0.5, 0.0, 6.410562343444494, 1.0, 0.5, 0.0]
+    tablepwf['rho_var']=[7.327471962526033e-15, 0.0, 0.5, 0.0, 0.10601992258525783, 1.0, 0.5, 0.0]
+    tablepwf['E_var']=[3.126388037344441e-13, 0.0, 0.5, 0.0, 2.3669062457543077e-05, 1.0, 0.5, 0.0]
+
+    tablepwf['mx_mean']=[0.1966843694485616, 0.0, 0.5, 0.0, 0.35926147905458855, 1.0, 0.5, 0.0]
+
+    tablepwf['mx_var']=[1.8304802118507268e-13, 0.0, 0.5, 0.0, 0.003750526481301933, 1.0, 0.5, 0.0]
+
+    tablepwf['my_mean']=[-0.0005318617114623177, 0.0, 0.5, 0.0, 0.00047270340334891166, 1.0, 0.5, 0.0]
+
+    tablepwf['my_var']=[3.792124236755382e-15, 0.0, 0.5, 0.0, 1.9635596761883828e-07, 1.0, 0.5, 0.0]
+
+    tablepwf['mz_mean']=[-0.0003734129861518945, 0.0, 0.5, 0.0, 0.00047559637960236306, 1.0, 0.5, 0.0]
+
+    tablepwf['mz_var']=[5.744363760126085e-16, 0.0, 0.5, 0.0, 1.3327815467899028e-07, 1.0, 0.5, 0.0]
+
+    tablepwf['rho_mean']=[1.0016140251131045, 0.0, 0.5, 0.0, 1.9773527243712083, 1.0, 0.5, 0.0]
+
+    return tablepwf[vname]
+
+
+    # =================================OUTPUT DEFINITIONS================================
+
 # ----------------------- CoProcessor definition -----------------------
 def CreateCoProcessor():
   def _CreatePipeline(coprocessor, datadescription):
@@ -49,9 +98,10 @@ def CreateCoProcessor():
       # To ensure correct image size when batc h processing, please search
       # for and uncomment the line `# renderView*.ViewSize = [*,*]`
       fields = getFields()
-      input = coprocessor.CreateProducer(datadescription, 'input')
+      LUT = []
+      PWF = []
       for ifield in range(0,len(fields)):
-
+          input = coprocessor.CreateProducer(datadescription, 'input')
 
         #  grid = input.GetClientSideObject().GetOutputDataObject(0)
           fieldname =  fields[ifield][0]
@@ -73,7 +123,7 @@ def CreateCoProcessor():
           renderView1.CameraFocalPoint = [7.500000000000001, 7.5000000000000036, 7.499999999999998]
           renderView1.CameraViewUp = [0.06238037400182964, 0.9924092871535368, 0.10598346904494559]
           renderView1.CameraParallelScale = 21.461294939791173
-          renderView1.Background = [0., 0., 0.]
+          renderView1.Background =[0., 0., 0.] #[0.32, 0.34, 0.43] 
 
           # init the 'GridAxes3DActor' selected for 'AxesGrid'
           renderView1.AxesGrid.XTitleFontFile = ''
@@ -100,33 +150,50 @@ def CreateCoProcessor():
           # show data from input
           inputDisplay = Show(input, renderView1)
 
-          # get color transfer function/color map for 'fieldname'
-          LUT = GetColorTransferFunction(fieldname)
-          LUT.RGBPoints = [1.0729195309977513e-12, 0.231373, 0.298039, 0.752941, 0.0820329561829567, 0.865003, 0.865003, 0.865003, 0.18127562157276733, 0.705882, 0.0156863, 0.14902]
-          LUT.Discretize = 0
-          LUT.ScalarRangeInitialized = 1.0
 
+
+            # rescale color and/or opacity maps used to include current data range
+        #  inputDisplay.RescaleTransferFunctionToDataRange(True, True)
+
+          # get color transfer function/color map for 'fieldname'
           # get opacity transfer function/opacity map for 'fieldname'
-          PWF = GetOpacityTransferFunction(fieldname)
-          PWF.Points = [1.0729195309977513e-12, 0.0, 0.5, 0.0, 0.18127562157276733, 1.0, 0.5, 0.0]
-          PWF.ScalarRangeInitialized = 1
+          if(len(LUT)< len(fields)):
+              LUT.append( GetColorTransferFunction(fieldname ))
+              PWF.append(GetOpacityTransferFunction(fieldname))
+          LUT[ifield].RGBPoints = getRGBPoints(fieldname)
+          LUT[ifield].Discretize = 1
+          LUT[ifield].ScalarRangeInitialized = 1.0
+
+          PWF[ifield].Points = getPWFPoints(fieldname)
+          PWF[ifield].ScalarRangeInitialized = 1
 
           # trace defaults for the display properties.
           inputDisplay.Representation = 'Volume'
           inputDisplay.ColorArrayName = ['POINTS', fieldname]
-          inputDisplay.LookupTable = LUT
-          inputDisplay.OSPRayScaleFunction = 'PiecewiseFunction'
-          inputDisplay.ScaleFactor = 1.5
-          inputDisplay.GlyphType = 'Arrow'
-          inputDisplay.GaussianRadius = 0.075
+          inputDisplay.SetScaleArray = ['POINTS', fieldname]
+         # inputDisplay.RescaleTransferFunctionToDataRange =
           inputDisplay.ScaleTransferFunction = 'PiecewiseFunction'
+          inputDisplay.LookupTable = LUT[ifield]
+          inputDisplay.OSPRayScaleArray = fieldname
+          inputDisplay.OSPRayScaleArray = fieldname
+          inputDisplay.OSPRayScaleFunction = 'PiecewiseFunction'
+          inputDisplay.SelectOrientationVectors = 'None'
+          inputDisplay.ScaleFactor = 1.5
+          inputDisplay.SelectScaleArray = 'None'
+          inputDisplay.GlyphType = 'Arrow'
+          inputDisplay.GlyphTableIndexArray = 'None'
+          inputDisplay.GaussianRadius = 0.075
+          inputDisplay.SetScaleArray = ['POINTS', fieldname]
+          inputDisplay.ScaleTransferFunction = 'PiecewiseFunction'
+          inputDisplay.OpacityArray = ['POINTS', fieldname]
           inputDisplay.OpacityTransferFunction = 'PiecewiseFunction'
           inputDisplay.DataAxesGrid = 'GridAxesRepresentation'
           inputDisplay.SelectionCellLabelFontFile = ''
           inputDisplay.SelectionPointLabelFontFile = ''
           inputDisplay.PolarAxes = 'PolarAxesRepresentation'
           inputDisplay.ScalarOpacityUnitDistance = 1.7320508075688776
-          inputDisplay.ScalarOpacityFunction = PWF
+          inputDisplay.ScalarOpacityFunction = PWF[ifield]
+          inputDisplay.VolumeRenderingMode = 'GPU Based'
           inputDisplay.Slice = 7
 
           # init the 'PiecewiseFunction' selected for 'OSPRayScaleFunction'
@@ -155,7 +222,7 @@ def CreateCoProcessor():
           # setup the color legend parameters for each legend in this view
 
           # get color legend/bar for LUT in view renderView1
-          LUTColorBar = GetScalarBar(LUT, renderView1)
+          LUTColorBar = GetScalarBar(LUT[ifield], renderView1)
           LUTColorBar.Title = fieldname
           LUTColorBar.ComponentTitle = ''
           LUTColorBar.TitleFontFile = ''
@@ -185,7 +252,7 @@ def CreateCoProcessor():
 
   coprocessor = CoProcessor()
   # these are the frequencies at which the coprocessor updates.
-  freqs = {'input': [1, 1]}
+  freqs = {'input': [1]}
   coprocessor.SetUpdateFrequencies(freqs)
   if requestSpecificArrays:
     arrays = [['E_mean', 0], ['E_var', 0], ['mx_mean', 0], ['mx_var', 0], ['my_mean', 0], ['my_var', 0], ['mz_mean', 0], ['mz_var', 0], ['rho_mean', 0], ['rho_var', 0]]

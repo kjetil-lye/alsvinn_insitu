@@ -123,6 +123,12 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                         std::cerr<< "warning: nsmaples not divisible by mpi_size : "<< nsamples/mpi_size<<std::endl;
                 }
 
+                std::cout<<"mpi rank : "<<mpi_rank<< " at variable "<< variable_name<<std::endl;
+
+
+
+
+
                 int norm_samples = nsamples;
                 const size_t ndata = (ngx*2+nx)*(ny+2*ngy)*(nz+2*ngz);
                 double avrg_data[ndata];
@@ -330,6 +336,7 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
         auto my_parameters = static_cast<MyParameters*>(parameters);
         int mpi_rank;
         MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
+        std::cout<<"mpi rank : "<<mpi_rank<< " at 1 end time "<< time<<std::endl;
 
         if(mpi_rank==0)
         {
@@ -340,6 +347,8 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
           }
           dataDescription->Delete();
         }
+        std::cout<<"mpi rank : "<<mpi_rank<< " at 2 end time "<< time<<std::endl;
+
 
 }
 

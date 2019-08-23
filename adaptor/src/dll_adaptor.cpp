@@ -310,7 +310,7 @@ DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
         auto my_parameters = static_cast<MyParameters*>(parameters);
         int mpi_rank;
         MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
-        std::cout<<"mpi rank : "<<mpi_rank<< " at time "<< time<<std::endl;
+  //      std::cout<<"mpi rank : "<<mpi_rank<< " at time "<< time<<std::endl;
 
         if(mpi_rank==0) {
 
@@ -323,7 +323,7 @@ DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
                         my_data->setEndTimeStep(true);
                 }
                 dataDescription = vtkCPDataDescription::New();
-                dataDescription->SetTimeData(my_data->getCurrentTime(), my_data->getCurrentTimestep());
+                dataDescription->SetTimeData(time, timestep_number); //my_data->getCurrentTime(), my_data->getCurrentTimestep());
                 dataDescription->AddInput("input");
         }
 
@@ -336,7 +336,7 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
         auto my_parameters = static_cast<MyParameters*>(parameters);
         int mpi_rank;
         MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
-        std::cout<<"mpi rank : "<<mpi_rank<< " at 1 end time "<< time<<std::endl;
+    //    std::cout<<"mpi rank : "<<mpi_rank<< " at 1 end time "<< time<<std::endl;
 
         if(mpi_rank==0)
         {
@@ -347,7 +347,7 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
           }
           dataDescription->Delete();
         }
-        std::cout<<"mpi rank : "<<mpi_rank<< " at 2 end time "<< time<<std::endl;
+        //std::cout<<"mpi rank : "<<mpi_rank<< " at 2 end time "<< time<<std::endl;
 
 
 }

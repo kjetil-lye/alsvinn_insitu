@@ -7,7 +7,7 @@ forceOutputAtFirstCall=False
 
 # Global screenshot output options
 imageFileNamePadding=1
-rescale_lookuptable=False
+rescale_lookuptable=True
 
 # Whether or not to request specific arrays from the adaptor.
 requestSpecificArrays=False
@@ -116,13 +116,13 @@ def CreateCoProcessor():
           # Create a new 'Render View'
           renderView1 = CreateView('RenderView')
           renderView1.ViewSize = [pixelw, pixelh]
+          renderView1.InteractionMode = '2D'
           renderView1.AxesGrid = 'GridAxes3DActor'
-          renderView1.CenterOfRotation = [7.5, 7.5, 7.5]
+          renderView1.CenterOfRotation = [63.5, 63.5, 0.0]
           renderView1.StereoType = 0
-          renderView1.CameraPosition = [-60, 6.8, 53.2]
-          renderView1.CameraFocalPoint = [7.500000000000001, 7.5000000000000036, 7.499999999999998]
-          renderView1.CameraViewUp = [0.06238037400182964, 0.9924092871535368, 0.10598346904494559]
-          renderView1.CameraParallelScale = 21.461294939791173
+          renderView1.CameraPosition = [63.5, 63.5, 10000.0]
+          renderView1.CameraFocalPoint = [63.5, 63.5, 0.0]
+          renderView1.CameraParallelScale = 89.80256121069154
           renderView1.Background =[0., 0., 0.] #[0.32, 0.34, 0.43]
 
           # init the 'GridAxes3DActor' selected for 'AxesGrid'
@@ -153,7 +153,7 @@ def CreateCoProcessor():
 
 
             # rescale color and/or opacity maps used to include current data range
-        #  inputDisplay.RescaleTransferFunctionToDataRange(True, True)
+          inputDisplay.RescaleTransferFunctionToDataRange(True, True)
 
           # get color transfer function/color map for 'fieldname'
           # get opacity transfer function/opacity map for 'fieldname'
@@ -168,7 +168,7 @@ def CreateCoProcessor():
           PWF[ifield].ScalarRangeInitialized = 1
 
           # trace defaults for the display properties.
-          inputDisplay.Representation = 'Volume'
+          inputDisplay.Representation = 'Surface'
           inputDisplay.ColorArrayName = ['POINTS', fieldname]
           inputDisplay.SetScaleArray = ['POINTS', fieldname]
          # inputDisplay.RescaleTransferFunctionToDataRange =

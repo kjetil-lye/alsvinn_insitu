@@ -1,5 +1,0 @@
-/users/rhohl/alsvinn_insitu/buuldtest/CMakeFiles/rebuild_cache.dir
-/users/rhohl/alsvinn_insitu/buuldtest/CMakeFiles/edit_cache.dir
-/users/rhohl/alsvinn_insitu/buuldtest/adaptor/CMakeFiles/rebuild_cache.dir
-/users/rhohl/alsvinn_insitu/buuldtest/adaptor/CMakeFiles/edit_cache.dir
-/users/rhohl/alsvinn_insitu/buuldtest/adaptor/CMakeFiles/dll_adaptor.dir

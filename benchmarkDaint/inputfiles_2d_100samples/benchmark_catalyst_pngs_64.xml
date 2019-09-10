@@ -1,0 +1,70 @@
+<config>
+<fvm>
+  <name>
+    kh
+  </name>
+  <platform>cuda</platform>
+  <grid>
+    <lowerCorner>0 0 0</lowerCorner>
+    <upperCorner>1 1 0</upperCorner>
+    <dimension>64 64 1</dimension>
+  </grid>
+  <boundary>periodic</boundary>
+  <flux>hll3</flux>
+  <endTime>4</endTime>
+  <equation>euler2</equation>
+  <equationParameters>
+    <gamma>1.4</gamma>
+  </equationParameters>
+  <reconstruction>weno2</reconstruction>
+  <cfl>auto</cfl>
+  <integrator>auto</integrator>
+  <functionals>
+  </functionals>
+  <initialData>
+    <python>kelvinhelmholtz.py</python>
+    <parameters>
+      <parameter>
+        <name>a</name>
+        <length>40</length>
+        <values><value>0</value></values>
+      </parameter>
+    </parameters>
+  </initialData>
+  <diffusion>
+    <name>none</name>
+    <reconstruction>none</reconstruction>
+  </diffusion>
+  <writer>
+      <type>dll</type>
+      <library>adaptor/libdll_adaptor.so</library>
+      <create_function>create</create_function>
+      <delete_function>delete_data</delete_function>
+      <write_function>CatalystCoProcess</write_function>
+      <make_parameters_function>make_parameters</make_parameters_function>
+      <delete_parameters_function>delete_parameters</delete_parameters_function>
+      <needs_data_on_host_function>needs_data_on_host</needs_data_on_host_function>
+      <set_parameter_function>set_parameter</set_parameter_function>
+      <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
+      <new_timestep_function>new_timestep</new_timestep_function>
+      <end_timestep_function>end_timestep</end_timestep_function>
+      <endTime>4</endTime>
+     <basename>kh</basename>
+      <catalystscript>../pythonScripts/generic2d.py</catalystscript>
+      <numberOfSaves>100</numberOfSaves>
+    </writer>
+</fvm>
+<uq>
+  <samples>100</samples>
+  <generator>auto</generator>
+  <parameters>
+    <parameter>
+      <name>a</name>
+      <length>40</length>
+      <type>uniform</type>
+    </parameter>
+  </parameters>
+  <stats>
+  </stats>
+</uq>
+</config>

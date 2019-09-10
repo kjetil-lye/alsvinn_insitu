@@ -3,15 +3,15 @@
   <name>
     kh
   </name>
-  <platform>cpu</platform>
+  <platform>cuda</platform>
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 0</upperCorner>
-    <dimension>64 64 1</dimension>
+    <dimension>1024 1024 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>3</endTime>
+  <endTime>4</endTime>
   <equation>euler2</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -21,7 +21,7 @@
   <integrator>auto</integrator>
   <functionals>
   </functionals>
-  <initialData>
+   <initialData>
     <python>kelvinhelmholtz.py</python>
     <parameters>
       <parameter>
@@ -48,15 +48,14 @@
       <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
-      <endTime>3</endTime>
-      <basename>meanVar</basename>
-      <numberOfSaves>10</numberOfSaves>
-      <samples>3</samples>
-    <catalystscript>../pythonScripts/generic2d.py</catalystscript>
+      <endTime>4</endTime>
+     <basename>kh</basename>
+      <catalystscript>../pythonScripts/generic2d.py</catalystscript>
+      <numberOfSaves>100</numberOfSaves>
     </writer>
 </fvm>
 <uq>
-  <samples>3</samples>
+  <samples>100</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>

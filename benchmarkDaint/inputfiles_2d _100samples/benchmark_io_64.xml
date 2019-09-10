@@ -3,15 +3,15 @@
   <name>
     kh
   </name>
-  <platform>cpu</platform>
+  <platform>cuda</platform>
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 0</upperCorner>
-    <dimension>2048 2048 1</dimension>
+    <dimension>64 64 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>2</endTime>
+  <endTime>4</endTime>
   <equation>euler2</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -37,7 +37,7 @@
   </diffusion>
 </fvm>
 <uq>
-  <samples>1</samples>
+  <samples>100</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>
@@ -50,7 +50,7 @@
   <name>
       meanvar
     </name>
-    <numberOfSaves>40</numberOfSaves>
+    <numberOfSaves>100</numberOfSaves>
     <writer>
       <type>netcdf</type>
       <basename>kh</basename>

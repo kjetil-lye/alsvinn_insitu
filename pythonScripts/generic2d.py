@@ -27,7 +27,7 @@ outputfrequency= 1
 
     # =================================OUTPUT DEFINITIONS================================
 def getFields():
-    return [['E_mean', 0], ['E_var', 0], ['mx_mean', 0], ['mx_var', 0], ['my_mean', 0], ['my_var', 0], ['mz_mean', 0], ['mz_var', 0], ['rho_mean', 0], ['rho_var', 0]]
+    return [['E_mean', 0], ['E_var', 0], ['mx_mean', 0], ['mx_var', 0], ['my_mean', 0], ['my_var', 0], ['rho_mean', 0], ['rho_var', 0]]
 
 def getImageSize(nx,nz,ny):
     hdw = 1920
@@ -54,9 +54,6 @@ def getRGBPoints(vname):
 
   tablergb['my_var']=[3.792124236755382e-15, 0.231373, 0.298039, 0.752941, 9.817798570548125e-08, 0.865003, 0.865003, 0.865003, 1.9635596761883828e-07, 0.705882, 0.0156863, 0.14902]
 
-  tablergb['mz_mean']=[-0.0003734129861518945, 0.231373, 0.298039, 0.752941, 5.109169672523427e-05, 0.865003, 0.865003, 0.865003, 0.00047559637960236306, 0.705882, 0.0156863, 0.14902]
-
-  tablergb['mz_var']=[5.744363760126085e-16, 0.231373, 0.298039, 0.752941, 6.663907762671332e-08, 0.865003, 0.865003, 0.865003, 1.3327815467899028e-07, 0.705882, 0.0156863, 0.14902]
 
   tablergb['rho_mean']=[1.0016140251131045, 0.231373, 0.298039, 0.752941, 1.4894833747421563, 0.865003, 0.865003, 0.865003, 1.9773527243712083, 0.705882, 0.0156863, 0.14902]
 
@@ -78,9 +75,9 @@ def getPWFPoints(vname):
 
     tablepwf['my_var']=[3.792124236755382e-15, 0.0, 0.5, 0.0, 1.9635596761883828e-07, 1.0, 0.5, 0.0]
 
-    tablepwf['mz_mean']=[-0.0003734129861518945, 0.0, 0.5, 0.0, 0.00047559637960236306, 1.0, 0.5, 0.0]
+ #   tablepwf['mz_mean']=[-0.0003734129861518945, 0.0, 0.5, 0.0, 0.00047559637960236306, 1.0, 0.5, 0.0]
 
-    tablepwf['mz_var']=[5.744363760126085e-16, 0.0, 0.5, 0.0, 1.3327815467899028e-07, 1.0, 0.5, 0.0]
+  #  tablepwf['mz_var']=[5.744363760126085e-16, 0.0, 0.5, 0.0, 1.3327815467899028e-07, 1.0, 0.5, 0.0]
 
     tablepwf['rho_mean']=[1.0016140251131045, 0.0, 0.5, 0.0, 1.9773527243712083, 1.0, 0.5, 0.0]
 
@@ -149,7 +146,6 @@ def CreateCoProcessor():
 
           # show data from input
           inputDisplay = Show(input, renderView1)
-
 
 
             # rescale color and/or opacity maps used to include current data range
@@ -255,7 +251,7 @@ def CreateCoProcessor():
   freqs = {'input': [1]}
   coprocessor.SetUpdateFrequencies(freqs)
   if requestSpecificArrays:
-    arrays = [['E_mean', 0], ['E_var', 0], ['mx_mean', 0], ['mx_var', 0], ['my_mean', 0], ['my_var', 0], ['mz_mean', 0], ['mz_var', 0], ['rho_mean', 0], ['rho_var', 0]]
+    arrays = [['E_mean', 0], ['E_var', 0], ['mx_mean', 0], ['mx_var', 0], ['my_mean', 0], ['my_var', 0], ['rho_mean', 0], ['rho_var', 0]]
     coprocessor.SetRequestedArrays('input', arrays)
   coprocessor.SetInitialOutputOptions(timeStepToStartOutputAt,forceOutputAtFirstCall)
 

@@ -14,8 +14,8 @@ cases = ["direct_no_io", "direct_io", "cat_pvti", "cat_png"]
 #xmlcases=["catalyst"]
 xmlcases = ["no_io", "io", "catalyst", "catalyst_pngs"]
 
-basedir = "/scratch/snx3000/rhohl/alsvinn_insitu/"
-#basedir = "/users/rhohl/alsvinn_insitu/" #/cluster/home/hohlr/alsvinn_insitu/" #/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu" #"
+#basedir = "/scratch/snx3000/rhohl/alsvinn_insitu/"
+basedir = "/users/rhohl/alsvinn_insitu/" #/cluster/home/hohlr/alsvinn_insitu/" #/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu" #"
 alsvinn = "/users/rhohl/alsvinn/build/alsuqcli/alsuqcli" # "/cluster/home/hohlr/alsvinn/build/alsuqcli/alsuqcli"
 
 #subprocess.check_call(["rm", "-rf", "build_*"], cwd =basedir)
@@ -40,5 +40,5 @@ for n in ns:
 	# subprocess.check_call(["OMP_NUM_THREADS=",ncores,"bsub", "-n",ncores, "-W", "4:00", alsvinn, xmlname], cwd = newfolder)
 #	subprocess.check_call(["bsub", "-n",nnodes, "-W", "4:00", alsvinn, xmlname], cwd = newfolder)
         totcommand = alsvinn+ " " + xmlname 
-        subprocess.check_call(["python3", "submit_command_on_daint.py", "-w", newfolder,  "--command" ,totcommand, "--name", xmlname,"--wait_time", "1","--nodes", nnodes,"--hint=nomultithread",  "--dry_run"])
-        subprocess.check_call(["python3", "submit_command_on_daint.py", "-w", newfolder,  "--command" ,totcommand, "--name", xmlname,"--wait_time", "1","--nodes","--hint=nomultithread", nnodes]) #, "--dry_run"])
+        subprocess.check_call(["python3", "submit_command_on_daint.py", "-w", newfolder,  "--command" ,totcommand, "--name", xmlname,"--wait_time", "1","--nodes", nnodes,  "--dry_run"])
+        subprocess.check_call(["python3", "submit_command_on_daint.py", "-w", newfolder,  "--command" ,totcommand, "--name", xmlname,"--wait_time", "1","--nodes", nnodes]) #, "--dry_run"])

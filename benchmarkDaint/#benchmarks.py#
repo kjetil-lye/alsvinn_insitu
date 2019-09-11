@@ -10,7 +10,9 @@ import subprocess
 nnodes = "1"
 ns = ["64"] #,"256", "512", "1024" ]
 
-cases = ["direct_no_io", "direct_io", "cat_pvti", "cat_png"]
+
+
+ cases = ["direct_no_io", "direct_io", "cat_pvti", "cat_png"]
 xmlcases = ["no_io", "io", "catalyst", "catalyst_pngs"]
 
 

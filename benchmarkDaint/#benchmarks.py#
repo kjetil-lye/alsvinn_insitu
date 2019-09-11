@@ -9,9 +9,8 @@ import subprocess
 
 nnodes = "1"
 ns = ["64"] #,"256", "512", "1024" ]
+
 cases = ["direct_no_io", "direct_io", "cat_pvti", "cat_png"]
-#cases = ["cat_pvti"]
-#xmlcases=["catalyst"]
 xmlcases = ["no_io", "io", "catalyst", "catalyst_pngs"]
 
 
@@ -39,5 +38,4 @@ for n in ns:
 	# subprocess.check_call(["OMP_NUM_THREADS=",ncores,"bsub", "-n",ncores, "-W", "4:00", alsvinn, xmlname], cwd = newfolder)
 #	subprocess.check_call(["bsub", "-n",nnodes, "-W", "4:00", alsvinn, xmlname], cwd = newfolder)
         totcommand = alsvinn+ " " + xmlname 
-        subprocess.check_call(["python3", "submit_command_on_daint.py", "-w", newfolder,  "--command" ,totcommand, "--name", xmlname,"--wait_time", "1","--nodes", nnodes, "--dry_run"])
-        subprocess.check_call(["python3", "submit_command_on_daint.py", "-w", newfolder,  "--command" ,totcommand, "--name", xmlname,"--wait_time", "1","--nodes", nnodes]) #, "--dry_run"])
+        subprocess.check_call(["python3", "submit_command_on_daint.py", "-w", ".",  "--command" ,totcommand, "--name", xmlname,"--wait_time", "1","--nodes", nnodes]) #, "--dry_run"])

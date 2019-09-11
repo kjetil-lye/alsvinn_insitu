@@ -52,6 +52,7 @@
      <basename>kh</basename>
       <catalystscript>../pythonScripts/generic2d.py</catalystscript>
       <numberOfSaves>100</numberOfSaves>
+  <samples>1</samples>
     </writer>
 </fvm>
 <uq>

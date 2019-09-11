@@ -43,10 +43,10 @@ Submits the configuration file CSCS Daint. NOTE: Will run in folder of configura
 #SBATCH --cpus-per-task={args.cpus_per_task}
 #SBATCH --partition=normal
 #SBATCH --constraint=gpu
-#SBATCH --account=s913
+
 
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-export CRAY_CUDA_MPS=1
+
 
 srun {args.command}
 """

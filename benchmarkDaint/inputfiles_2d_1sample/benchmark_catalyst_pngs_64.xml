@@ -52,11 +52,12 @@
      <basename>kh</basename>
       <catalystscript>../pythonScripts/generic2d.py</catalystscript>
       <numberOfSaves>100</numberOfSaves>
+  <samples>1</samples>
     </writer>
 </fvm>
 <uq>
-  <samples>1</samples>
   <generator>auto</generator>
+  <samples>1</samples>
   <parameters>
     <parameter>
       <name>a</name>

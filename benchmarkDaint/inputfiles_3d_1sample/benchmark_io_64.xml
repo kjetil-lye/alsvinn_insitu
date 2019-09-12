@@ -52,8 +52,7 @@
     </parameter>
   </parameters>
   <stats>
-  <stat>
-    <name>
+  <name>
       meanvar
     </name>
     <numberOfSaves>100</numberOfSaves>
@@ -62,7 +61,6 @@
       <basename>kh3d</basename>
     </writer>
     </stat>
-
   </stats>
 </uq>
 </config>

@@ -50,18 +50,17 @@
       <end_timestep_function>end_timestep</end_timestep_function>
       <endTime>4</endTime>
       <basename>none</basename>
-        <samples>1</samples>
-      <catalystscript>../pythonScripts/generic3d.py</catalystscript>
+        <samples>3</samples>
       <numberOfSaves>100</numberOfSaves>
     </writer>
 </fvm>
 <uq>
-  <samples>1</samples>
+  <samples>3</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>
       <name>a</name>
-      <length>60</length>
+      <length>40</length>
       <type>uniform</type>
     </parameter>
   </parameters>

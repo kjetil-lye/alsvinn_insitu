@@ -42,7 +42,7 @@
   </writer>
 </fvm>
 <uq>
-  <samples>1</samples>
+  <samples>3</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>
@@ -52,7 +52,8 @@
     </parameter>
   </parameters>
   <stats>
-  <name>
+  <stat>
+    <name>
       meanvar
     </name>
     <numberOfSaves>0</numberOfSaves>
@@ -61,6 +62,7 @@
       <basename>kh3d</basename>
     </writer>
     </stat>
+
   </stats>
 </uq>
 </config>

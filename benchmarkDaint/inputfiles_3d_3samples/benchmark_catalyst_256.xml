@@ -11,7 +11,7 @@
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>4</endTime>
+  <endTime>4<endTime>
   <equation>euler3</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -36,13 +36,26 @@
     <reconstruction>none</reconstruction>
   </diffusion>
   <writer>
-    <type>netcdf</type>
-    <basename>kh3d</basename>
-    <numberOfSaves>0</numberOfSaves>
-  </writer>
+      <type>dll</type>
+      <library>adaptor/libdll_adaptor.so</library>
+      <create_function>create</create_function>
+      <delete_function>delete_data</delete_function>
+      <write_function>CatalystCoProcess</write_function>
+      <make_parameters_function>make_parameters</make_parameters_function>
+      <delete_parameters_function>delete_parameters</delete_parameters_function>
+      <needs_data_on_host_function>needs_data_on_host</needs_data_on_host_function>
+      <set_parameter_function>set_parameter</set_parameter_function>
+      <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
+      <new_timestep_function>new_timestep</new_timestep_function>
+      <end_timestep_function>end_timestep</end_timestep_function>
+      <endTime>4</endTime>
+      <basename>none</basename>
+        <samples>3</samples>
+      <numberOfSaves>100</numberOfSaves>
+    </writer>
 </fvm>
 <uq>
-  <samples>1</samples>
+  <samples>3</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>
@@ -52,15 +65,7 @@
     </parameter>
   </parameters>
   <stats>
-  <name>
-      meanvar
-    </name>
-    <numberOfSaves>0</numberOfSaves>
-    <writer>
-      <type>netcdf</type>
-      <basename>kh3d</basename>
-    </writer>
-    </stat>
   </stats>
 </uq>
+
 </config>

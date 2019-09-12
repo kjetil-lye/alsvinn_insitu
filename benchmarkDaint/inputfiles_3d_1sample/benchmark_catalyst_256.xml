@@ -60,7 +60,7 @@
   <parameters>
     <parameter>
       <name>a</name>
-      <length>40</length>
+      <length>60</length>
       <type>uniform</type>
     </parameter>
   </parameters>

@@ -52,17 +52,15 @@
     </parameter>
   </parameters>
   <stats>
-  <stat>
-    <name>
+  <name>
       meanvar
     </name>
-    <numberOfSaves>100</numberOfSaves>
+    <numberOfSaves>0</numberOfSaves>
     <writer>
       <type>netcdf</type>
       <basename>kh3d</basename>
     </writer>
     </stat>
-
   </stats>
 </uq>
 </config>

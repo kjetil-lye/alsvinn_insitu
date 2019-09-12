@@ -179,7 +179,7 @@ NetCDFMPIWriter: Writing to new file kh3d_variance_9.nc
 Making new file with sizes [8, 8, 8]
 Simulation finished!
 
-Duration: 715 ms
+Duration: 665 ms
 
 Duration (wall time): 00:00:01
 

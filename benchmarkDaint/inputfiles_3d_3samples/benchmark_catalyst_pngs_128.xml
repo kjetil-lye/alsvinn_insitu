@@ -7,7 +7,7 @@
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 1</upperCorner>
-    <dimension>64 64 64</dimension>
+    <dimension>128 128 128</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
@@ -50,13 +50,13 @@
       <end_timestep_function>end_timestep</end_timestep_function>
       <endTime>4</endTime>
       <basename>none</basename>
-        <samples>1</samples>
+        <samples>3</samples>
       <catalystscript>../pythonScripts/generic3d.py</catalystscript>
       <numberOfSaves>100</numberOfSaves>
     </writer>
 </fvm>
 <uq>
-  <samples>1</samples>
+  <samples>3</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>

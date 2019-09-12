@@ -3,23 +3,25 @@
   <name>
     kh3d
   </name>
-  <platform>cuda</platform>
+  <platform>cpu</platform>
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 1</upperCorner>
-    <dimension>256 256 256</dimension>
+    <dimension>64 64 64</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>4</endTime>
+  <endTime>2</endTime>
   <equation>euler3</equation>
   <equationParameters>
     <gamma>1.4</gamma>
   </equationParameters>
-  <reconstruction>weno2</reconstruction>
+  <reconstruction>none</reconstruction>
   <cfl>auto</cfl>
   <integrator>auto</integrator>
   <functionals>
+
+
   </functionals>
   <initialData>
     <python>kelvinhelmholtz_3d_tube.py</python>
@@ -38,11 +40,11 @@
   <writer>
     <type>netcdf</type>
     <basename>kh3d</basename>
-    <numberOfSaves>0</numberOfSaves>
+    <numberOfSaves>10</numberOfSaves>
   </writer>
 </fvm>
 <uq>
-  <samples>1</samples>
+  <samples>3</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>
@@ -52,15 +54,17 @@
     </parameter>
   </parameters>
   <stats>
-  <name>
+  <stat>
+    <name>
       meanvar
     </name>
-    <numberOfSaves>0</numberOfSaves>
+    <numberOfSaves>10</numberOfSaves>
     <writer>
       <type>netcdf</type>
       <basename>kh3d</basename>
     </writer>
     </stat>
+
   </stats>
 </uq>
 </config>

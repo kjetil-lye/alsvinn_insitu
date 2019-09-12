@@ -123,7 +123,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                         std::cerr<< "warning: nsmaples not divisible by mpi_size : "<< nsamples/mpi_size<<std::endl;
                 }
 
-                std::cout<<"mpi rank : "<<mpi_rank<< " at variable "<< variable_name<<std::endl;
+//                std::cout<<"mpi rank : "<<mpi_rank<< " at variable "<< variable_name<<std::endl;
 
 
 
@@ -237,7 +237,7 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
         int mpi_rank;
         MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
 
-        std::cout << "rank " << mpi_rank << " : In set_mpi_comm" << std::endl;
+  //      std::cout << "rank " << mpi_rank << " : In set_mpi_comm" << std::endl;
 
         //create new communicator to use in CatalystCoProcess
 
@@ -310,7 +310,7 @@ DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
         auto my_parameters = static_cast<MyParameters*>(parameters);
         int mpi_rank;
         MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
-  //      std::cout<<"mpi rank : "<<mpi_rank<< " at time "<< time<<std::endl;
+        std::cout<<"mpi rank : "<<mpi_rank<< " at time "<< time<<std::endl;
 
         if(mpi_rank==0) {
 

@@ -55,10 +55,10 @@
   <name>
       meanvar
     </name>
-    <numberOfSaves>100</numberOfSaves>
     <writer>
       <type>netcdf</type>
       <basename>kh2d</basename>
+    <numberOfSaves>100</numberOfSaves>
     </writer>
     </stat>
   </stats>

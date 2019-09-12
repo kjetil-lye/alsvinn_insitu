@@ -35,8 +35,13 @@
     <name>none</name>
     <reconstruction>none</reconstruction>
   </diffusion>
-</fvm>
-<uq>
+  <writer>
+    <type>netcdf</type>
+    <basename>kh2d</basename>
+    <numberOfSaves>0</numberOfSaves>
+  </writer>
+  </fvm>
+  <uq>
   <samples>1</samples>
   <generator>auto</generator>
   <parameters>
@@ -53,9 +58,9 @@
     <numberOfSaves>0</numberOfSaves>
     <writer>
       <type>netcdf</type>
-      <basename>kh</basename>
+      <basename>kh2d</basename>
     </writer>
     </stat>
   </stats>
-</uq>
-</config>
+  </uq>
+  </config>

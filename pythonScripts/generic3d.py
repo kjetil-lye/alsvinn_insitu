@@ -30,8 +30,8 @@ def getFields():
     return [['E_mean', 0], ['E_var', 0], ['mx_mean', 0], ['mx_var', 0], ['my_mean', 0], ['my_var', 0], ['mz_mean', 0], ['mz_var', 0], ['rho_mean', 0], ['rho_var', 0]]
 
 def getImageSize(nx,nz,ny):
-    hdw = 1600
-    hdh = 900
+    hdw = 1920
+    hdh = 1080
     d = 2 #never 1d
     if(not(nx ==1 or ny ==1 or nz ==1)):
         d=3
@@ -108,7 +108,7 @@ def CreateCoProcessor():
           print(fieldname)
 
          # pixelw,pixelh = getImageSize(64,64,64)
-          pixelw,pixelh = 1600,900
+          pixelw,pixelh = 1920,1080
 
           #### disable automatic camera reset on 'Show'
           paraview.simple._DisableFirstRenderCameraReset()

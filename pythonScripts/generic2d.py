@@ -7,7 +7,7 @@ forceOutputAtFirstCall=False
 
 # Global screenshot output options
 imageFileNamePadding=1
-rescale_lookuptable=True
+rescale_lookuptable=False
 
 # Whether or not to request specific arrays from the adaptor.
 requestSpecificArrays=False
@@ -149,7 +149,7 @@ def CreateCoProcessor():
 
 
             # rescale color and/or opacity maps used to include current data range
-          inputDisplay.RescaleTransferFunctionToDataRange(True, True)
+    #      inputDisplay.RescaleTransferFunctionToDataRange(True, True)
 
           # get color transfer function/color map for 'fieldname'
           # get opacity transfer function/opacity map for 'fieldname'

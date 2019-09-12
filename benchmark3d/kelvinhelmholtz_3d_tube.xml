@@ -7,7 +7,7 @@
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 1</upperCorner>
-    <dimension>64 64 64</dimension>
+    <dimension>8 8 8</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
@@ -20,8 +20,6 @@
   <cfl>auto</cfl>
   <integrator>auto</integrator>
   <functionals>
-
-
   </functionals>
   <initialData>
     <python>kelvinhelmholtz_3d_tube.py</python>
@@ -40,7 +38,7 @@
   <writer>
     <type>netcdf</type>
     <basename>kh3d</basename>
-    <numberOfSaves>10</numberOfSaves>
+    <numberOfSaves>0</numberOfSaves>
   </writer>
 </fvm>
 <uq>

@@ -1,0 +1,190 @@
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+Git version:       f41f82299f473a9dd37eaa7f8f608402a25007ac
+Repository was:    DIRTY
+Build type :       
+CUDA Version:      
+Extra CXX flags:   
+CUDA flags:        
+Floating point:    double (double precision, 64 bits)
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+omp max threads= 4
+sampleStart = 0
+statistics.numberOfSaves = 10
+Running simulator... 
+Running sample: 0
+
+Reading parameter array
+Read value 0
+Adding writer kh3d
+Dimensions are 8, 8, 8
+Python program: 
+########################
+from math import *
+try:
+    from numpy import *
+except:
+    pass
+import numpy as np
+
+def init_global(rho, ux, uy, uz, p, nx, ny, nz, ax, ay, az, bx, by, bz):
+    N = int(len(a)/6)
+    a1 = a[:N]
+    a2 = a[N:2*N]
+    a3 = a[2*N:3*N]
+    b1 = a[3*N:4*N]
+    b2 = a[4*N:5*N]
+    b3 = a[5*N:6*N]
+
+    perturbation = 0.1
+    normalization1 = sum(a1)
+    if abs(normalization1) < 1e-10:
+        normalization1 = 1
+    normalization2 = sum(a2)
+    if abs(normalization2) < 1e-10:
+        normalization2 = 1
+    normalization3 = sum(a3)
+    if abs(normalization3) < 1e-10:
+        normalization3 = 1
+
+    x = np.linspace(ax, bx, nx)
+    y = np.linspace(ay, by, ny)
+    z = np.linspace(az, bz, nz)
+    Y, X, Z = np.meshgrid(y, x, z)
+    X = X
+    Y = Y
+    Z = Z
+
+    R = ((Y - 0.5)**2 + (Z - 0.5)**2)**(0.5)
+
+    Theta = np.arctan2(Z, Y)
+    perturbation_radius = perturbation*sum([a1[i]*cos(2*pi*(i+1)*(R+b1[i])) for i in range(len(a1))], 0)/normalization1
+    perturbation_radius += perturbation*sum([a2[i]*cos(2*pi*(i+1)*(Theta+b2[i])) for i in range(len(a2))], 0)/normalization2
+    perturbation_radius += perturbation*sum([a3[i]*cos(2*pi*(i+1)*(X+b3[i])) for i in range(len(a3))], 0)/normalization3
+    perturbation_radius /= 2
+
+    middle = (R < 0.25 + perturbation_radius)
+
+    rho[:, :, :] = 2.0 * middle + 1.0*(1-middle)
+    ux[:, :, :] = -0.5*middle + 0.5*(1-middle)
+    uy[:,:,:] = np.zeros_like(X)
+    uz[:,:,:] = np.zeros_like(X)
+    p[:,:,:] = 2.5*np.ones_like(X)
+
+def call_init_global(nx, ny, nz, ax, ay, az, bx, by, bz):
+    init_global(rho_global, ux_global, uy_global, uz_global, p_global, nx, ny, nz, ax, ay, az, bx, by, bz)
+########################
+Pythonprogram evaluated
+InitialData grid sizes[8, 8, 8]
+Done setting initial data
+Computing statistics, currentTime = 0.2, 
+	numberSaves = 1
+	timeInterval = 0.2
+	endTime = 2
+Computing statistics, currentTime = 0.4, 
+	numberSaves = 2
+	timeInterval = 0.2
+	endTime = 2
+Computing statistics, currentTime = 0.6, 
+	numberSaves = 3
+	timeInterval = 0.2
+	endTime = 2
+Computing statistics, currentTime = 0.8, 
+	numberSaves = 4
+	timeInterval = 0.2
+	endTime = 2
+Computing statistics, currentTime = 1, 
+	numberSaves = 5
+	timeInterval = 0.2
+	endTime = 2
+Computing statistics, currentTime = 1.2, 
+	numberSaves = 6
+	timeInterval = 0.2
+	endTime = 2
+Computing statistics, currentTime = 1.4, 
+	numberSaves = 7
+	timeInterval = 0.2
+	endTime = 2
+Computing statistics, currentTime = 1.6, 
+	numberSaves = 8
+	timeInterval = 0.2
+	endTime = 2
+Computing statistics, currentTime = 1.8, 
+	numberSaves = 9
+	timeInterval = 0.2
+	endTime = 2
+Computing statistics, currentTime = 2, 
+	numberSaves = 10
+	timeInterval = 0.2
+	endTime = 2
+NetCDFMPIWriter: Writing to new file kh3d_mean_0.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_variance_0.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_mean_1.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_variance_1.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_mean_2.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_variance_2.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_mean_3.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_variance_3.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_mean_4.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_variance_4.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_mean_5.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_variance_5.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_mean_6.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_variance_6.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_mean_7.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_variance_7.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_mean_8.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_variance_8.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_mean_9.nc
+
+Making new file with sizes [8, 8, 8]
+NetCDFMPIWriter: Writing to new file kh3d_variance_9.nc
+
+Making new file with sizes [8, 8, 8]
+Simulation finished!
+
+Duration: 715 ms
+
+Duration (wall time): 00:00:01
+
+Statistics times for meanvar:
+	computing:  0 s
+	combing:    0 s
+	finalizing: 0 s
+

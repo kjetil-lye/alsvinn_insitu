@@ -1,0 +1,162 @@
+{
+    "report": {
+        "software": "alsvinn https:\/\/github.com\/alsvinn",
+        "softwareVersion": "0.5.1",
+        "currentWorkingDirectory": "\/home\/ramona\/MasterthesisLOCAL\/coding\/alsvinn_insitu\/benchmark3d",
+        "operatingSystem": "Linux: Linux 4.15.0-60-generic #67-Ubuntu SMP Thu Aug 22 16:55:30 UTC 2019 x86_64",
+        "username": "ramona",
+        "host": "Yoga",
+        "standardCLibrary": "GNU libc 2.27 stable",
+        "generatedAt": "20190912T094428",
+        "CPU": "Intel(R) Core(TM) i7-4500U CPU @ 1.80GHz",
+        "revision": "f41f82299f473a9dd37eaa7f8f608402a25007ac",
+        "versionControlStatus": "DIRTY",
+        "buildType": "",
+        "cxxFlags": "",
+        "cxxFlagsDebug": "-g",
+        "cxxFlagsRelease": "-O3 -DNDEBUG",
+        "cxxFlagsMinSizeRel": "-Os -DNDEBUG",
+        "cxxFlagsRelWithDebInfo": "-O2 -g -DNDEBUG",
+        "cudaFlags": "",
+        "cudaVersion": "",
+        "cxxCompiler": "GNU 7.4.0",
+        "cudaCompiler": " ",
+        "boost": {
+            "BOOST_VERSION": "106700",
+            "BOOST_LIB_VERSION": "1_67",
+            "BOOST_PLATFORM": "linux",
+            "BOOST_PLATFORM_CONFIG": "boost\/config\/platform\/linux.hpp",
+            "BOOST_COMPILER": "GNU C++ version 7.4.0",
+            "BOOST_LIBSTDCXX_VERSION": "70400",
+            "C++11": "true",
+            "BOOST_STDLIB": "GNU libstdc++ version 20181206",
+            "BOOST_STDLIB_CONFIG": "boost\/config\/stdlib\/libstdcpp3.hpp"
+        },
+        "floatingPointPrecisionDescription": "double (double precision, 64 bits)",
+        "floatingPointType": "double",
+        "floatingPointMax": "1.79769e+308",
+        "floatingPointMin": "2.22507e-308",
+        "floatingPointEpsilon": "2.22045e-16",
+        "mpiEnabled": "true",
+        "mpiProcesses": "1",
+        "mpiVersion": "Open MPI v2.1.1, package: Open MPI buildd@lcy01-amd64-009 Distribution, ident: 2.1.1, repo rev: v2.1.0-100-ga2fdb5b, May 10, 2017",
+        "ompEnabled": "true",
+        "ompThreads": "4",
+        "loadedTextFiles": {
+            "_dash_home_dash_ramona_dash_MasterthesisLOCAL_dash_coding_dash_alsvinn_insitu_dash_benchmark3d_dash__DOT__dash_kelvinhelmholtz_3d_tube_DOT_py": "import numpy as np\n\ndef init_global(rho, ux, uy, uz, p, nx, ny, nz, ax, ay, az, bx, by, bz):\n    N = int(len(a)\/6)\n    a1 = a[:N]\n    a2 = a[N:2*N]\n    a3 = a[2*N:3*N]\n    b1 = a[3*N:4*N]\n    b2 = a[4*N:5*N]\n    b3 = a[5*N:6*N]\n\n    perturbation = 0.1\n    normalization1 = sum(a1)\n    if abs(normalization1) < 1e-10:\n        normalization1 = 1\n    normalization2 = sum(a2)\n    if abs(normalization2) < 1e-10:\n        normalization2 = 1\n    normalization3 = sum(a3)\n    if abs(normalization3) < 1e-10:\n        normalization3 = 1\n\n    x = np.linspace(ax, bx, nx)\n    y = np.linspace(ay, by, ny)\n    z = np.linspace(az, bz, nz)\n    Y, X, Z = np.meshgrid(y, x, z)\n    X = X\n    Y = Y\n    Z = Z\n\n    R = ((Y - 0.5)**2 + (Z - 0.5)**2)**(0.5)\n\n    Theta = np.arctan2(Z, Y)\n    perturbation_radius = perturbation*sum([a1[i]*cos(2*pi*(i+1)*(R+b1[i])) for i in range(len(a1))], 0)\/normalization1\n    perturbation_radius += perturbation*sum([a2[i]*cos(2*pi*(i+1)*(Theta+b2[i])) for i in range(len(a2))], 0)\/normalization2\n    perturbation_radius += perturbation*sum([a3[i]*cos(2*pi*(i+1)*(X+b3[i])) for i in range(len(a3))], 0)\/normalization3\n    perturbation_radius \/= 2\n\n    middle = (R < 0.25 + perturbation_radius)\n\n    rho[:, :, :] = 2.0 * middle + 1.0*(1-middle)\n    ux[:, :, :] = -0.5*middle + 0.5*(1-middle)\n    uy[:,:,:] = np.zeros_like(X)\n    uz[:,:,:] = np.zeros_like(X)\n    p[:,:,:] = 2.5*np.ones_like(X)\n",
+            "_dash_home_dash_ramona_dash_MasterthesisLOCAL_dash_coding_dash_alsvinn_insitu_dash_benchmark3d_dash__DOT__dash_kelvinhelmholtz_3d_tube_DOT_xml": "<config>\n<fvm>\n  <name>\n    kh3d\n  <\/name>\n  <platform>cpu<\/platform>\n  <grid>\n    <lowerCorner>0 0 0<\/lowerCorner>\n    <upperCorner>1 1 1<\/upperCorner>\n    <dimension>8 8 8<\/dimension>\n  <\/grid>\n  <boundary>periodic<\/boundary>\n  <flux>hll3<\/flux>\n  <endTime>2<\/endTime>\n  <equation>euler3<\/equation>\n  <equationParameters>\n    <gamma>1.4<\/gamma>\n  <\/equationParameters>\n  <reconstruction>none<\/reconstruction>\n  <cfl>auto<\/cfl>\n  <integrator>auto<\/integrator>\n  <functionals>\n  <\/functionals>\n  <initialData>\n    <python>kelvinhelmholtz_3d_tube.py<\/python>\n    <parameters>\n      <parameter>\n        <name>a<\/name>\n        <length>60<\/length>\n        <values><value>0<\/value><\/values>\n      <\/parameter>\n    <\/parameters>\n  <\/initialData>\n  <diffusion>\n    <name>none<\/name>\n    <reconstruction>none<\/reconstruction>\n  <\/diffusion>\n  <writer>\n    <type>netcdf<\/type>\n    <basename>kh3d<\/basename>\n    <numberOfSaves>0<\/numberOfSaves>\n  <\/writer>\n<\/fvm>\n<uq>\n  <samples>1<\/samples>\n  <generator>auto<\/generator>\n  <parameters>\n    <parameter>\n      <name>a<\/name>\n      <length>60<\/length>\n      <type>uniform<\/type>\n    <\/parameter>\n  <\/parameters>\n  <stats>\n  <stat>\n    <name>\n      meanvar\n    <\/name>\n    <numberOfSaves>10<\/numberOfSaves>\n    <writer>\n      <type>netcdf<\/type>\n      <basename>kh3d<\/basename>\n    <\/writer>\n    <\/stat>\n\n  <\/stats>\n<\/uq>\n<\/config>\n"
+        },
+        "pythonVersion": "Runtime: 2.7.15+ (default, Nov 27 2018, 23:36:35) \n[GCC 7.3.0], compile time: 2.7.15+",
+        "timings": {
+            "allTimedEvents": {
+                "totalTime": "0.69383860100000005",
+                "percentOfProgramTotalTime": "100",
+                "hasIndividualTimeData": "false",
+                "alsvinn": {
+                    "totalTime": "0.69383860100000005",
+                    "percentOfProgramTotalTime": "100",
+                    "hasIndividualTimeData": "true",
+                    "fvm": {
+                        "totalTime": "0.58840099899999998",
+                        "percentOfProgramTotalTime": "85",
+                        "hasIndividualTimeData": "false",
+                        "init": {
+                            "totalTime": "0.135057396",
+                            "percentOfProgramTotalTime": "20",
+                            "hasIndividualTimeData": "false",
+                            "python": {
+                                "totalTime": "0.135057396",
+                                "percentOfProgramTotalTime": "20",
+                                "hasIndividualTimeData": "true",
+                                "evaluation": {
+                                    "totalTime": "0.001644806",
+                                    "percentOfProgramTotalTime": "1",
+                                    "hasIndividualTimeData": "true"
+                                },
+                                "init_global": {
+                                    "totalTime": "0.0024284850000000002",
+                                    "percentOfProgramTotalTime": "1",
+                                    "hasIndividualTimeData": "true"
+                                }
+                            }
+                        },
+                        "io": {
+                            "totalTime": "0.029736535000000005",
+                            "percentOfProgramTotalTime": "5",
+                            "hasIndividualTimeData": "false",
+                            "netcdf": {
+                                "totalTime": "0.029736535000000005",
+                                "percentOfProgramTotalTime": "5",
+                                "hasIndividualTimeData": "true"
+                            }
+                        },
+                        "numflux": {
+                            "totalTime": "0.26725880999999974",
+                            "percentOfProgramTotalTime": "39",
+                            "hasIndividualTimeData": "true"
+                        },
+                        "reconstruction": {
+                            "totalTime": "0.15634825800000027",
+                            "percentOfProgramTotalTime": "23",
+                            "hasIndividualTimeData": "true"
+                        }
+                    },
+                    "mpi": {
+                        "totalTime": "0.0010576760000000002",
+                        "percentOfProgramTotalTime": "1",
+                        "hasIndividualTimeData": "false",
+                        "exchange": {
+                            "totalTime": "0.0010576760000000002",
+                            "percentOfProgramTotalTime": "1",
+                            "hasIndividualTimeData": "true",
+                            "wait": {
+                                "totalTime": "0.00021341300000000005",
+                                "percentOfProgramTotalTime": "1",
+                                "hasIndividualTimeData": "true"
+                            }
+                        }
+                    },
+                    "uq": {
+                        "totalTime": "0.0076278349999999995",
+                        "percentOfProgramTotalTime": "2",
+                        "hasIndividualTimeData": "false",
+                        "generate": {
+                            "totalTime": "3.3779999999999998e-05",
+                            "percentOfProgramTotalTime": "1",
+                            "hasIndividualTimeData": "true"
+                        },
+                        "init": {
+                            "totalTime": "0.0025385099999999999",
+                            "percentOfProgramTotalTime": "1",
+                            "hasIndividualTimeData": "true"
+                        },
+                        "stats": {
+                            "totalTime": "0.0050555449999999998",
+                            "percentOfProgramTotalTime": "1",
+                            "hasIndividualTimeData": "false",
+                            "combine": {
+                                "totalTime": "0.0018453010000000001",
+                                "percentOfProgramTotalTime": "1",
+                                "hasIndividualTimeData": "true"
+                            },
+                            "compute": {
+                                "totalTime": "0.0032102440000000001",
+                                "percentOfProgramTotalTime": "1",
+                                "hasIndividualTimeData": "true"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "executable": "alsuqcli",
+        "name": "kh3d",
+        "endTime": "20190912T094428",
+        "cpuDuration": "715",
+        "cpuDurationHuman": "00:00:00",
+        "wallTime": "1000",
+        "wallTimeHuman": "00:00:01",
+        "timesteps": "110",
+        "command": "\/home\/ramona\/MasterthesisLOCAL\/coding\/alsvinn\/build_new\/alsuqcli\/alsuqcli .\/kelvinhelmholtz_3d_tube.xml "
+    }
+}

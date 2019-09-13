@@ -1,18 +1,17 @@
 #fdasfdas ! /usr/bin/env python3
 # # fdasgfs encoding: utf-8
-
-
 import datetime
 import os
 import subprocess
 
-
+wtime ="24"
 nnodes = "1"
-ns = ["1024"] #,"256", "512", "1024" ]
-cases = ["direct_no_io", "direct_io", "cat_pvti", "cat_png"]
+ns = ["1024", "2048"] #,"256", "512", "1024" ]
 #cases = ["cat_pvti"]
-#xmlcases=["catalyst"]
-xmlcases = ["no_io", "io", "catalyst", "catalyst_pngs"]
+#cases = ["direct_no_io", "direct_io", "cat_pvti", "cat_png"]
+cases = ["cat_pvti", "cat_png"]
+xmlcases=["catalyst", "catalyst_pngs"]
+#xmlcases = ["no_io", "io", "catalyst", "catalyst_pngs"]
 
 #basedir = "/scratch/snx3000/rhohl/alsvinn_insitu/"
 basedir = "/users/rhohl/alsvinn_insitu/" #/cluster/home/hohlr/alsvinn_insitu/" #/home/ramona/MasterthesisLOCAL/coding/alsvinn_insitu" #"
@@ -24,10 +23,11 @@ for n in ns:
     for i in range(0,len(cases)):
         c = cases[i]
         xmlname = basedir+"benchmarkDaint/inputfiles_2d_1sample/benchmark_"+xmlcases[i]+"_"+n+".xml"
-        newfolder = "build_"+c+"_"+n
+        jobname = xmlcases[i]+"_"+n+"_"+nnodes
+	newfolder = "build_"+c+"_"+n
         subprocess.check_call(["mkdir", newfolder], cwd =basedir)
         newfolder = basedir+newfolder
- 	if(i==2 or i==3):       
+ 	if(c == "cat_png" or c== "cat_pvti"):       
 		subprocess.check_call(["cmake", "-DOPENGL_opengl_LIBRARY=/opt/cray/nvidia/default/lib64/libOpenGL.so", "-DTBB_INCLUDE_DIR=/opt/intel/compilers_and_libraries/linux/tbb/include", "-DTBB_LIBRARY_RELEASE=/opt/intel/compilers_and_libraries/linux/tbb/lib/intel64/gcc4.7/libtbb.so", ".."], cwd = newfolder)
         	subprocess.check_call(["make"], cwd = newfolder)
 	print ' xml file :'
@@ -40,5 +40,5 @@ for n in ns:
 	# subprocess.check_call(["OMP_NUM_THREADS=",ncores,"bsub", "-n",ncores, "-W", "4:00", alsvinn, xmlname], cwd = newfolder)
 #	subprocess.check_call(["bsub", "-n",nnodes, "-W", "4:00", alsvinn, xmlname], cwd = newfolder)
         totcommand = alsvinn+ " " + xmlname 
-        subprocess.check_call(["python3", "submit_command_on_daint.py", "-w", newfolder,  "--command" ,totcommand, "--name", xmlname,"--wait_time", "1","--nodes", nnodes,  "--dry_run"])
-        subprocess.check_call(["python3", "submit_command_on_daint.py", "-w", newfolder,  "--command" ,totcommand, "--name", xmlname,"--wait_time", "1","--nodes", nnodes]) #, "--dry_run"])
+        subprocess.check_call(["python3", "submit_command_on_daint.py", "-w", newfolder,  "--command" ,totcommand, "--name", jobname,"--wait_time", wtime,"--nodes", nnodes,  "--dry_run"])
+        subprocess.check_call(["python3", "submit_command_on_daint.py", "-w", newfolder,  "--command" ,totcommand, "--name", jobname,"--wait_time", wtime,"--nodes", nnodes]) #, "--dry_run"])

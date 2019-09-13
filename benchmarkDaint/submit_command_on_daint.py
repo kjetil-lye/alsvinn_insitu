@@ -36,6 +36,8 @@ Submits the configuration file CSCS Daint. NOTE: Will run in folder of configura
     args = parser.parse_args()
     submit_file=f"""#!/bin/bash -l
 #SBATCH --job-name="{args.name}"
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=hohlr@ethz.ch
 #SBATCH --time={args.wait_time}:00:00
 #SBATCH --nodes={args.nodes}
 #SBATCH --ntasks-per-core=1

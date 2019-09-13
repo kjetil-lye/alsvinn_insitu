@@ -6,11 +6,12 @@ import subprocess
 
 wtime ="24"
 nnodes = "1"
-ns = ["1024", "2048"] #,"256", "512", "1024" ]
+dim ="3"
+ns = ["64"] #"1024", "2048"] #,"256", "512", "1024" ]
 #cases = ["cat_pvti"]
 #cases = ["direct_no_io", "direct_io", "cat_pvti", "cat_png"]
-cases = ["cat_pvti", "cat_png"]
-xmlcases=["catalyst", "catalyst_pngs"]
+cases = [ "cat_pvti", "cat_png"]
+xmlcases=[ "catalyst", "catalyst_pngs"]
 #xmlcases = ["no_io", "io", "catalyst", "catalyst_pngs"]
 
 #basedir = "/scratch/snx3000/rhohl/alsvinn_insitu/"
@@ -21,12 +22,12 @@ alsvinn = "/users/rhohl/alsvinn/build/alsuqcli/alsuqcli" # "/cluster/home/hohlr/
 
 for n in ns:
     for i in range(0,len(cases)):
-        c = cases[i]
-        xmlname = basedir+"benchmarkDaint/inputfiles_2d_1sample/benchmark_"+xmlcases[i]+"_"+n+".xml"
-        jobname = xmlcases[i]+"_"+n+"_"+nnodes
-	newfolder = "build_"+c+"_"+n
-        subprocess.check_call(["mkdir", newfolder], cwd =basedir)
-        newfolder = basedir+newfolder
+        c = cases[i] 
+        xmlname = basedir+"benchmarkDaint/inputfiles_"+dim+"d_1sample/benchmark_"+xmlcases[i]+"_"+n+".xml"
+	jobname = xmlcases[i]+"_"+n+"_"+dim+"d_"+nnodes
+	newfolder = "build_"+c+"_"+n+"_"+dim+ "d_"+nnodes
+	subprocess.check_call(["mkdir", newfolder], cwd =basedir)
+	newfolder = basedir+newfolder
  	if(c == "cat_png" or c== "cat_pvti"):       
 		subprocess.check_call(["cmake", "-DOPENGL_opengl_LIBRARY=/opt/cray/nvidia/default/lib64/libOpenGL.so", "-DTBB_INCLUDE_DIR=/opt/intel/compilers_and_libraries/linux/tbb/include", "-DTBB_LIBRARY_RELEASE=/opt/intel/compilers_and_libraries/linux/tbb/lib/intel64/gcc4.7/libtbb.so", ".."], cwd = newfolder)
         	subprocess.check_call(["make"], cwd = newfolder)

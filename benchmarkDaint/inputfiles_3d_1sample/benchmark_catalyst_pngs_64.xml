@@ -11,7 +11,7 @@
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>4<endTime>
+  <endTime>2</endTime>
   <equation>euler3</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -20,6 +20,8 @@
   <cfl>auto</cfl>
   <integrator>auto</integrator>
   <functionals>
+
+
   </functionals>
   <initialData>
     <python>kelvinhelmholtz_3d_tube.py</python>
@@ -48,7 +50,7 @@
       <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
-      <endTime>4</endTime>
+      <endTime>2</endTime>
       <basename>none</basename>
         <samples>1</samples>
       <catalystscript>../pythonScripts/generic3d.py</catalystscript>
@@ -61,7 +63,7 @@
   <parameters>
     <parameter>
       <name>a</name>
-      <length>60</length>
+      <length>40</length>
       <type>uniform</type>
     </parameter>
   </parameters>

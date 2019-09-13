@@ -52,13 +52,13 @@
       <end_timestep_function>end_timestep</end_timestep_function>
       <endTime>2</endTime>
       <basename>none</basename>
-        <samples>1</samples>
+        <samples>100</samples>
       <catalystscript>../pythonScripts/generic3d.py</catalystscript>
       <numberOfSaves>100</numberOfSaves>
     </writer>
 </fvm>
 <uq>
-  <samples>1</samples>
+  <samples>100</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>

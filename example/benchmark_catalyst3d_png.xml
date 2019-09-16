@@ -3,15 +3,15 @@
   <name>
     kh3d
   </name>
-  <platform>cpu</platform>
+  <platform>cuda</platform>
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 1</upperCorner>
-    <dimension>256 256 256</dimension>
+    <dimension>16 16 16</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>2</endTime>
+  <endTime>1</endTime>
   <equation>euler3</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -50,15 +50,15 @@
       <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
-      <endTime>2</endTime>
+      <endTime>1</endTime>
       <basename>none</basename>
-        <samples>1</samples>
+        <samples>3</samples>
       <catalystscript>../pythonScripts/generic3d.py</catalystscript>
-      <numberOfSaves>100</numberOfSaves>
+      <numberOfSaves>10</numberOfSaves>
     </writer>
 </fvm>
 <uq>
-  <samples>1</samples>
+  <samples>3</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>

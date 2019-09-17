@@ -29,10 +29,7 @@
 
 #define ADAPTOR_USE_VTKCPPROCESSOR 0
 
-#define PRINTL { int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank); std::cerr << "In GLOBAL RANK " << rank << ", at line: " <<__LINE__ << std::endl; }
-#define PRINTL2 { int rank; int rank2; int rank3;  MPI_Comm_rank(MPI_COMM_WORLD, &rank); MPI_Comm_rank(spatialComm, &rank3); MPI_Comm_rank(coproc_comm, &rank2); std::cout << "In GLOBAL RANK " << rank << " in spatial rank "<< rank3 <<" in sample rank "<< rank2<< ", at line: " <<__LINE__ << std::endl; }
-
-
+#define PRINTL { int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank); std::cout << "In rank " << rank << ", at line: " <<__LINE__ << std::endl; }
 // Simple macro to print parameters
 #define PRINT_PARAM(X) std::cout << "Value of " << #X << " is " << X << std::endl
 extern "C" {
@@ -47,12 +44,12 @@ vtkMPICommunicatorOpaqueComm* Comm = NULL;
 vtkCPDataDescription*  dataDescription = NULL;  //vtkCPDataDescription::New();
 
 
-inline int getSpatialRank(int globalR, int numProcS){
-  return globalR%numProcS;
+inline int getSpatialRank(int globalR, int nProcS){
+  return globalR/nProcS;
 };
 
-inline int getStatisticalRank(int globalR, int numProcS){
-  return globalR/numProcS;
+inline int getStatisticalRank(int globalR, int nProcS){
+  return globalR%nProcS;
 };
 
 DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
@@ -68,11 +65,11 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
 
 void fillGrid(int mpi_rank, int numProcS, int multiXproc,int multiYproc, int multiZproc, const char* variable_name, int nx, int ny, int nz, int ngx, int ngy, int ngz, double* avrg_data, double* avrg_sqr_data, int norm_samples)
 {
-PRINTL
+
     vtkMultiPieceDataSet* multiPiece = vtkMultiPieceDataSet::SafeDownCast(VTKGrid->GetBlock(0));
     vtkDataSet* dataSet = vtkDataSet::SafeDownCast(multiPiece->GetPiece(getStatisticalRank(mpi_rank, numProcS)));
-PRINTL
-    if (dataSet->GetPointData()->GetArray((std::string(variable_name)+"_mean").c_str()) == NULL )
+
+    if (dataSet->GetPointData()->GetArrays((std::string(variable_name)+"_mean").c_str()) == NULL )
     {      // Create a field associated with points
           vtkDoubleArray* field_array_mean = vtkDoubleArray::New();
           vtkDoubleArray* field_array_var = vtkDoubleArray::New();
@@ -86,25 +83,24 @@ PRINTL
           field_array_var->SetName( (std::string(variable_name)+"_var").c_str() );
           dataSet->GetPointData()->AddArray(field_array_mean);
           dataSet->GetPointData()->AddArray(field_array_var);
-          PRINTL
     }
-PRINTL
-            vtkDoubleArray* field_array_mean = vtkDoubleArray::SafeDownCast(dataSet->GetPointData()->GetArray((std::string(variable_name)+"_mean").c_str()));
-            vtkDoubleArray* field_array_var = vtkDoubleArray::SafeDownCast(dataSet->GetPointData()->GetArray( (std::string(variable_name)+"_var").c_str()));
-PRINTL
+
+          field_array_mean = vtkDoubleArray::SafeDownCast(dataSet->GetPointData()->GetArray((std::string(variable_name)+"_mean").c_str()));
+          field_array_var = vtkDoubleArray::SafeDownCast(dataSet->GetPointData()->GetArray( (std::string(variable_name)+"_var").c_str()));
+
           int index = 0;
           int idx = 0;
 
-          int x_dom = getSpatialRank(mpi_rank, numProcS)%multiXproc;
-          int y_dom = (getSpatialRank(mpi_rank, numProcS)/multiXproc)%multiYproc;
-          int z_dom = getSpatialRank(mpi_rank, numProcS)/multiYproc;
+          int x_dom = getSpatialRank(mpi_rank, nProcS)%multiXproc;
+          int y_dom = (getSpatialRank(mpi_rank, nProcS)/multiXproc)%multiYproc;
+          int z_dom = getSpatialRank(mpi_rank, nProcS)/multiYproc;
 
           // ignoring ghost cells (ngy is number of ghost cells in z direction)
-          for (int z = ngz + z_dom*nz; z < nz + ngz + z_dom*nz; ++z) {
+          for (int z = ngz; z < nz + ngz; ++z) {
                   // ignoring ghost cells (ngy is number of ghost cells in y direction)
-                  for (int y = ngy + y_dom*ny; y < ny + ngy+y_dom*ny; ++y) {
+                  for (int y = ngy; y < ny + ngy; ++y) {
                           // ignoring ghost cells (ngx is number of ghost cells in x direction)
-                          for (int x = ngx+x_dom*nx; x < nx + ngx+x_dom*nx; ++x) {
+                          for (int x = ngx; x < nx + ngx; ++x) {
                                   index = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
                                   double tmp = avrg_data[index]/double(norm_samples);
                                   field_array_mean->SetValue(idx, tmp);
@@ -115,7 +111,7 @@ PRINTL
                   }
 
           }
-PRINTL
+
     //      VTKImage->GetPointData()->AddArray(field_array_mean);
   //        VTKImage->GetPointData()->AddArray(field_array_var);
   //        field_array_mean->Delete();
@@ -134,8 +130,6 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                           int ngx, int ngy, int ngz, double ax, double ay, double az, double bx,
                                           double by, double bz, int gpu_number )
 {
-
-PRINTL
                 auto my_data = static_cast<MyData*>(data);
                 auto my_parameters = static_cast<MyParameters*>(parameters);
 
@@ -143,19 +137,14 @@ PRINTL
                 const int multiXproc = std::stoi(mb.substr(0,1) );
                 const int multiYproc = std::stoi(mb.substr(2,1) );
                 const int multiZproc = std::stoi(mb.substr(4,1) );
+
                 const int numProcS = multiXproc*multiYproc*multiZproc;
-PRINTL
+                std::cout<< "Running Multiproc per dim x,y,z: "<< multiXproc<<" "<< multiYproc<< " " <<multiZproc <<std::endl;
+
                 int mpi_rank;
                 MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
                 int mpi_size;
                 MPI_Comm_size(my_parameters->getMPIComm(), &mpi_size);
-                int mpi_size2;
-                MPI_Comm_size(spatialComm, &mpi_size2);
-            //  int mpi_size3;
-          //      MPI_Comm_size( coproc_comm, &mpi_size3);
-std::cout<< "  ===================================== "<< mpi_size2<< " "<<mpi_size2<<std::endl;
-
-
                 //check if we can run all in parallel:
                 int nsamples = std::stoi(my_parameters->getParameter("samples"));
                 if(mpi_size < nsamples) {
@@ -163,29 +152,28 @@ std::cout<< "  ===================================== "<< mpi_size2<< " "<<mpi_si
                 }
 
 
-                std::cout<<"mpi rank : "<<mpi_rank<< " at variable "<< variable_name;
-                  std::cout<<"spatial rank : "<<getSpatialRank(mpi_rank,numProcS);
-                        std::cout<<"sample rank : "<<getStatisticalRank(mpi_rank,numProcS) <<std::endl;
-PRINTL
+                std::cout<<"mpi rank : "<<mpi_rank<< " at variable "<< variable_name<<std::endl;
+
+
 
                 int norm_samples = nsamples;
                 const size_t ndata = (ngx*2+nx)*(ny+2*ngy)*(nz+2*ngz);
                 double avrg_data[ndata];
                 double avrg_sqr_data[ndata];
-PRINTL
-                MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, spatialComm); //getSpatialRank(mpi_rank, numProcS)
-PRINTL
+
+                MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, spatialComm);
+
                 double sqr_variable_data[ndata];
                 //get squared sum to use for variance, reuse variable_data to save space
                 for (int i = 0; i< ndata; ++i) {
                         sqr_variable_data[i] = variable_data[i]*variable_data[i];
                 }
-PRINTL
+
                 MPI_Reduce(&sqr_variable_data, avrg_sqr_data, ndata, MPI_DOUBLE, MPI_SUM, 0, spatialComm);
 
                 if( getStatisticalRank(mpi_rank, numProcS) == 0 )
                 {
-PRINTL
+
                 int extend[6]  = {0, multiXproc*(nx-1),0,multiYproc*(ny-1),0,multiZproc*(nz-1)};
 
                 if(VTKImage == NULL)
@@ -204,9 +192,9 @@ PRINTL
                         VTKGrid->SetBlock(0, multiPiece.GetPointer());
 
                 }
-PRINTL
+
                 fillGrid(mpi_rank, numProcS, multiXproc,multiYproc, multiZproc, variable_name,  nx,  ny,  nz, ngx,  ngy,  ngz, avrg_data, avrg_sqr_data, norm_samples);
-PRINTL
+
           }
     }
 
@@ -240,7 +228,7 @@ DLL_ADAPTOR_EXPORT void set_parameter(void* parameters, const char* key,
 
 DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
                                      MPI_Comm communicator) {
-PRINTL
+
         auto my_parameters = static_cast<MyParameters*>(parameters);
         std::string mb = my_parameters->getParameter("multiblock");
         const int multiXproc = std::stoi(mb.substr(0,1) );
@@ -260,7 +248,7 @@ PRINTL
 
 
         MPI_Comm tmp_comm;
-        MPI_Comm_dup(my_parameters->getMPIComm(), &tmp_comm);
+        MPI_Comm_DUP(my_parameters->getMPIComm(), tmp_comm);
 
         //create the spatial communicators:
         MPI_Comm_split(tmp_comm, getSpatialRank(mpi_rank, numProcS), mpi_rank, &spatialComm);
@@ -273,15 +261,14 @@ PRINTL
                 MPI_Comm_split(my_parameters->getMPIComm(), MPI_UNDEFINED, mpi_rank, &coproc_comm);
         }
 
-    //    MPI_Comm_free(&tmp_comm);
+        MPI_Comm_free(tmp_comm);
 
-        if(getStatisticalRank(mpi_rank, numProcS) == 0)
+        if(mpi_rank == 0)
         {
-PRINTL
-
-              if (Processor == NULL) //TODO how many tome can this be done?
+                //const std::string version = my_parameters->getParameter("basename");
+                // Initialize catalyst, set processes
+                if (Processor == NULL)
                 {
-
                         Processor = vtkCPProcessor::New();
                         Comm = new vtkMPICommunicatorOpaqueComm(&coproc_comm );
                         Processor->Initialize(*Comm);
@@ -289,11 +276,22 @@ PRINTL
                 }
                 else
                 {
-
                         Processor->RemoveAllPipelines();
                 }
 
-                                //default script
+
+                if(ADAPTOR_USE_VTKCPPROCESSOR) //if used with vtkCPProcessor
+                {
+                        int outputFrequency=1;
+                        std::string name = "out";
+                        vtkNew<isosurfaceVtkPipeline> pipelinevtk;
+                        pipelinevtk->Initialize(outputFrequency, name);
+                        Processor->AddPipeline(pipelinevtk);
+
+                }
+                else
+                {
+                        //default script
                         const char *script_default = "../pythonScripts/gridwriter.py";
 
                         vtkNew<vtkCPPythonScriptPipeline> pipeline;
@@ -308,18 +306,16 @@ PRINTL
                                 std::cout<<"only default pipeline script: "<< script_default<<std::endl;
                                 pipeline->Initialize(script_default);
                                 Processor->AddPipeline(pipeline);
-                                PRINTL
                         }
                         else
                         {
-                          PRINTL
                                 std::cout<<"pipeline script: "<< script_loc<<std::endl;
                                 pipeline->Initialize(script_loc);
                                 Processor->AddPipeline(pipeline);
                         }
 
-      }
-      PRINTL
+                }
+        }
 }
 
 
@@ -401,11 +397,9 @@ DLL_ADAPTOR_EXPORT void delete_data(void* data) {
         {
 
                 MPI_Comm_free(&coproc_comm);
-
         }
         if(spatialComm)
         {
-
 
                 MPI_Comm_free(&spatialComm);
         }
@@ -413,5 +407,5 @@ DLL_ADAPTOR_EXPORT void delete_data(void* data) {
         delete static_cast<MyData*>(data);
 }
 
-} //end DLL_ADAPTOR_EXPORT
+
                                                                                                                                                                                                                                             //extern c

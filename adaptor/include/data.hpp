@@ -7,7 +7,7 @@ double getCurrentTime() const;
 bool isEndTimestep() const;
 bool isNewTimestep() const;
 bool isNewVariable(const std::string new_name);
-
+void setNewVariable(const std::string new_name);
 void setCurrentTimestep(int value);
 void setCurrentTime(double value);
 void setEndTimeStep(bool value);
@@ -70,7 +70,12 @@ inline bool MyData::isNewVariable(const std::string new_name)
         if (var_name == new_name) {
                 return false;
         }else{
-                var_name= new_name;
+              //  var_name= new_name;
                 return true;
         }
+}
+
+inline void MyData::setNewVariable(const std::string new_name)
+{
+      var_name= new_name;
 }

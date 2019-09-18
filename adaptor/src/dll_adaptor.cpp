@@ -25,10 +25,6 @@
 #include <vtkMultiPieceDataSet.h>
 #include <vtkMultiProcessController.h>
 
-#define ADAPTOR_USE_MPI_ON  1
-
-#define ADAPTOR_USE_VTKCPPROCESSOR 0
-
 #define PRINTL { int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank); std::cerr << "In GLOBAL RANK " << rank << ", at line: " <<__LINE__ << std::endl; }
 
 // Simple macro to print parameters
@@ -64,13 +60,13 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
 
 
 
-void fillGrid(int mpi_rank, int numProcS, int multiXproc,int multiYproc, int multiZproc, const char* variable_name, int nx, int ny, int nz, int ngx, int ngy, int ngz, double* avrg_data, double* avrg_sqr_data, int norm_samples)
+void fillGrid(int mpi_rank, int numProcS, int multiXproc,int multiYproc, int multiZproc, const char* variable_name, int nx, int ny, int nz, int ngx, int ngy, int ngz, double avrg_data[], double avrg_sqr_data[], int norm_samples)
 {
 
     vtkMultiPieceDataSet* multiPiece = vtkMultiPieceDataSet::SafeDownCast(VTKGrid->GetBlock(0));
     vtkDataSet* dataSet = vtkDataSet::SafeDownCast(multiPiece->GetPiece(getSpatialRank(mpi_rank, numProcS)));
   int ntuples = multiXproc*multiYproc*multiZproc*nx*ny*nz;
-    if (true ) //dataSet->GetPointData()->GetArray((std::string(variable_name)+"_mean").c_str()) == NULL )
+    if (!dataSet->GetPointData()->GetArray((std::string(variable_name)+"_mean").c_str()))
     {      // Create a field associated with points
           vtkDoubleArray* field_array_mean = vtkDoubleArray::New();
           vtkDoubleArray* field_array_var = vtkDoubleArray::New();
@@ -112,8 +108,6 @@ PRINTL
                                   }else{
                                     globalIndex = (z -ngz + z_dom*nz)*nx*ny+ (y-ngy + y_dom*ny)*nx + (x -ngx + x_dom*nx); //z*nx*ny+y*nx +x
                                   }
-
-                                 if(globalIndex> 4080) std::cout<<"    global index = "<<globalIndex<< " and w/o z"<<(y-ngy + y_dom*ny)*nx + (x -ngx + x_dom*nx)<<" of "<<ntuples<<std::endl;
 
                                   double tmp = avrg_data[localIndex]/double(norm_samples);
                                   field_array_mean->SetValue(globalIndex, tmp);
@@ -195,39 +189,36 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
 
                 if( mpi_spatialRank == 0 )
                 {
-
-
-                  int mpi_statRank; // is the same as the spatial Rank
+                  int mpi_statRank; // is the same as the spatialRank
                   MPI_Comm_rank(coproc_comm, &mpi_statRank);
 
-                  if(mpi_statRank != getSpatialRank(mpi_rank, numProcS))
-                  {
-                      std::cout<< " ATTENTION !!!!!!!!!!"<<std::endl;
-
-                  }
-
-
-                if(VTKImage == NULL)
-                {
-                        int extend[6]  = {0, multiXproc*nx-1,0,multiYproc*ny-1,0,multiZproc*nz-1};
-                        VTKImage = vtkImageData::New();
-                        VTKImage->SetExtent(extend);
-                }
 
                 if (VTKGrid == NULL)
                 {
+
+                  if(VTKImage == NULL)
+                  {
+                          int extend[6]  = {0, multiXproc*nx-1,0,multiYproc*ny-1,0,multiZproc*nz-1};
+                          VTKImage = vtkImageData::New();
+                          VTKImage->SetOrigin(0, 0, 0);
+                          VTKImage->SetExtent(extend);
+                  }
+
+
                         VTKGrid = vtkMultiBlockDataSet::New();
                         vtkNew<vtkMultiPieceDataSet> multiPiece;
                         multiPiece->SetNumberOfPieces(numProcS);
-                        multiPiece->SetPiece( getSpatialRank(mpi_rank, numProcS), VTKImage);
+                        multiPiece->SetPiece( mpi_statRank, VTKImage);
                         VTKGrid->SetNumberOfBlocks(1);
                         VTKGrid->SetBlock(0, multiPiece.GetPointer());
-
                 }
 
                 fillGrid(mpi_rank, numProcS, multiXproc,multiYproc, multiZproc, variable_name,  nx,  ny,  nz, ngx,  ngy,  ngz, avrg_data, avrg_sqr_data, norm_samples);
 PRINTL
+    dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
+
           }
+
     }
 
 
@@ -295,8 +286,6 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
 
         if(mpi_spatialRank == 0)
         {
-
-
               if (Processor == NULL)
                 {
 
@@ -385,7 +374,7 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
 
         if(mpi_spatialRank==0) {
           PRINTL
-                dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
+            //    dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
                 dataDescription->ForceOutputOn();
                 if(Processor->RequestDataDescription(dataDescription)!=0 )
                 {
@@ -394,8 +383,6 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
                 dataDescription->Delete();
         }
         //std::cout<<"mpi rank : "<<mpi_rank<< " at 2 end time "<< time<<std::endl;
-
-
 }
 
 
@@ -431,9 +418,7 @@ PRINTL
         }
         if(spatialComm)
         {
-
-
-                MPI_Comm_free(&spatialComm);
+                        MPI_Comm_free(&spatialComm);
         }
 
         delete static_cast<MyData*>(data);

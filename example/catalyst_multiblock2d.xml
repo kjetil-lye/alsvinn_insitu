@@ -55,7 +55,7 @@
         <samples>2</samples>
         <multiblock>2 1 1</multiblock>
       <catalystscript>../pythonScripts/gridwriter.py</catalystscript>
-      <numberOfSaves>3</numberOfSaves>
+      <numberOfSaves>4</numberOfSaves>
     </writer>
 </fvm>
 <uq>

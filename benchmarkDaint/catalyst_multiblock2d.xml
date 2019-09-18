@@ -7,12 +7,12 @@
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 1</upperCorner>
-    <dimension>16 16 16</dimension>
+    <dimension>64 64 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
   <endTime>1</endTime>
-  <equation>euler3</equation>
+  <equation>euler2</equation>
   <equationParameters>
     <gamma>1.4</gamma>
   </equationParameters>
@@ -24,7 +24,7 @@
 
   </functionals>
   <initialData>
-    <python>kelvinhelmholtz_3d_tube.py</python>
+    <python>kelvinhelmholtz.py</python>
     <parameters>
       <parameter>
         <name>a</name>
@@ -55,7 +55,7 @@
         <samples>2</samples>
         <multiblock>2 1 1</multiblock>
       <catalystscript>../pythonScripts/gridwriter.py</catalystscript>
-      <numberOfSaves>2</numberOfSaves>
+      <numberOfSaves>3</numberOfSaves>
     </writer>
 </fvm>
 <uq>

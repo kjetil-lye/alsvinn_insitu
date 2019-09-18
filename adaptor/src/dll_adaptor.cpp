@@ -30,8 +30,6 @@
 #define ADAPTOR_USE_VTKCPPROCESSOR 0
 
 #define PRINTL { int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank); std::cerr << "In GLOBAL RANK " << rank << ", at line: " <<__LINE__ << std::endl; }
-#define PRINTL2 { int rank; int rank2; int rank3;  MPI_Comm_rank(MPI_COMM_WORLD, &rank); MPI_Comm_rank(spatialComm, &rank3); MPI_Comm_rank(coproc_comm, &rank2); std::cout << "In GLOBAL RANK " << rank << " in spatial rank "<< rank3 <<" in sample rank "<< rank2<< ", at line: " <<__LINE__ << std::endl; }
-
 
 // Simple macro to print parameters
 #define PRINT_PARAM(X) std::cout << "Value of " << #X << " is " << X << std::endl
@@ -68,16 +66,15 @@ DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
 
 void fillGrid(int mpi_rank, int numProcS, int multiXproc,int multiYproc, int multiZproc, const char* variable_name, int nx, int ny, int nz, int ngx, int ngy, int ngz, double* avrg_data, double* avrg_sqr_data, int norm_samples)
 {
-PRINTL
+
     vtkMultiPieceDataSet* multiPiece = vtkMultiPieceDataSet::SafeDownCast(VTKGrid->GetBlock(0));
-    vtkDataSet* dataSet = vtkDataSet::SafeDownCast(multiPiece->GetPiece(getStatisticalRank(mpi_rank, numProcS)));
-PRINTL
-    if (dataSet->GetPointData()->GetArray((std::string(variable_name)+"_mean").c_str()) == NULL )
+    vtkDataSet* dataSet = vtkDataSet::SafeDownCast(multiPiece->GetPiece(getSpatialRank(mpi_rank, numProcS)));
+  int ntuples = multiXproc*multiYproc*multiZproc*nx*ny*nz;
+    if (true ) //dataSet->GetPointData()->GetArray((std::string(variable_name)+"_mean").c_str()) == NULL )
     {      // Create a field associated with points
           vtkDoubleArray* field_array_mean = vtkDoubleArray::New();
           vtkDoubleArray* field_array_var = vtkDoubleArray::New();
 
-          int ntuples = multiXproc*multiYproc*multiZproc*nx*ny*nz;
           field_array_mean->SetNumberOfComponents(1);
           field_array_mean->SetNumberOfTuples(ntuples);
           field_array_var->SetNumberOfComponents(1);
@@ -86,31 +83,44 @@ PRINTL
           field_array_var->SetName( (std::string(variable_name)+"_var").c_str() );
           dataSet->GetPointData()->AddArray(field_array_mean);
           dataSet->GetPointData()->AddArray(field_array_var);
+          field_array_mean->Delete();
+          field_array_var->Delete();
           PRINTL
     }
-PRINTL
+
             vtkDoubleArray* field_array_mean = vtkDoubleArray::SafeDownCast(dataSet->GetPointData()->GetArray((std::string(variable_name)+"_mean").c_str()));
             vtkDoubleArray* field_array_var = vtkDoubleArray::SafeDownCast(dataSet->GetPointData()->GetArray( (std::string(variable_name)+"_var").c_str()));
-PRINTL
-          int index = 0;
-          int idx = 0;
+
+          int localIndex = 0;
+          int globalIndex = 0;
 
           int x_dom = getSpatialRank(mpi_rank, numProcS)%multiXproc;
           int y_dom = (getSpatialRank(mpi_rank, numProcS)/multiXproc)%multiYproc;
           int z_dom = getSpatialRank(mpi_rank, numProcS)/multiYproc;
+PRINTL
+// ignoring ghost cells (ngy is number of ghost cells in z direction)
+         for (int z = ngz; z < nz + ngz; ++z) {
+                 // ignoring ghost cells (ngy is number of ghost cells in y direction)
+                 for (int y = ngy; y < ny + ngy; ++y) {
+                         // ignoring ghost cells (ngx is number of ghost cells in x direction)
+                         for (int x = ngx; x < nx + ngx; ++x) {
 
-          // ignoring ghost cells (ngy is number of ghost cells in z direction)
-          for (int z = ngz + z_dom*nz; z < nz + ngz + z_dom*nz; ++z) {
-                  // ignoring ghost cells (ngy is number of ghost cells in y direction)
-                  for (int y = ngy + y_dom*ny; y < ny + ngy+y_dom*ny; ++y) {
-                          // ignoring ghost cells (ngx is number of ghost cells in x direction)
-                          for (int x = ngx+x_dom*nx; x < nx + ngx+x_dom*nx; ++x) {
-                                  index = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
-                                  double tmp = avrg_data[index]/double(norm_samples);
-                                  field_array_mean->SetValue(idx, tmp);
-                                  tmp =  avrg_sqr_data[index]/double(norm_samples) -tmp*tmp;
-                                  field_array_var->SetValue(idx, tmp);
-                                  idx += 1;
+                                  localIndex = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
+                                  if(nz <2)
+                                  {
+                                    globalIndex = (y-ngy + y_dom*ny)*nx + (x -ngx + x_dom*nx); //z*nx*ny+y*nx +x
+                                  }else{
+                                    globalIndex = (z -ngz + z_dom*nz)*nx*ny+ (y-ngy + y_dom*ny)*nx + (x -ngx + x_dom*nx); //z*nx*ny+y*nx +x
+                                  }
+
+                                 if(globalIndex> 4080) std::cout<<"    global index = "<<globalIndex<< " and w/o z"<<(y-ngy + y_dom*ny)*nx + (x -ngx + x_dom*nx)<<" of "<<ntuples<<std::endl;
+
+                                  double tmp = avrg_data[localIndex]/double(norm_samples);
+                                  field_array_mean->SetValue(globalIndex, tmp);
+                                  tmp =  avrg_sqr_data[localIndex]/double(norm_samples) -tmp*tmp;
+                                  field_array_var->SetValue(globalIndex, tmp);
+
+
                           }
                   }
 
@@ -135,7 +145,6 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                           double by, double bz, int gpu_number )
 {
 
-PRINTL
                 auto my_data = static_cast<MyData*>(data);
                 auto my_parameters = static_cast<MyParameters*>(parameters);
 
@@ -144,18 +153,19 @@ PRINTL
                 const int multiYproc = std::stoi(mb.substr(2,1) );
                 const int multiZproc = std::stoi(mb.substr(4,1) );
                 const int numProcS = multiXproc*multiYproc*multiZproc;
-PRINTL
+
                 int mpi_rank;
                 MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
                 int mpi_size;
                 MPI_Comm_size(my_parameters->getMPIComm(), &mpi_size);
-                int mpi_size2;
-                MPI_Comm_size(spatialComm, &mpi_size2);
-            //  int mpi_size3;
-          //      MPI_Comm_size( coproc_comm, &mpi_size3);
-std::cout<< "  ===================================== "<< mpi_size2<< " "<<mpi_size2<<std::endl;
+                int mpi_spatialRank; // is the same as the sampleRank
+                MPI_Comm_rank(spatialComm, &mpi_spatialRank);
+                int mpi_spatialSize; // is the same as number of samples
+                MPI_Comm_size(spatialComm, &mpi_spatialSize);
 
+//std::cout<< "  ===================================== "<< mpi_spatialRank<< " of "<<mpi_spatialSize<<std::endl;
 
+//std::cout<<" ns "<<nx<<" "<<ny<<" "<<nz<<std::endl;
                 //check if we can run all in parallel:
                 int nsamples = std::stoi(my_parameters->getParameter("samples"));
                 if(mpi_size < nsamples) {
@@ -163,33 +173,43 @@ std::cout<< "  ===================================== "<< mpi_size2<< " "<<mpi_si
                 }
 
 
-                std::cout<<"mpi rank : "<<mpi_rank<< " at variable "<< variable_name;
-                  std::cout<<"spatial rank : "<<getSpatialRank(mpi_rank,numProcS);
-                        std::cout<<"sample rank : "<<getStatisticalRank(mpi_rank,numProcS) <<std::endl;
-PRINTL
+          //      std::cout<<"mpi rank : "<<mpi_rank<< " at variable "<< variable_name;
+          //        std::cout<<"spatial rank : "<<getSpatialRank(mpi_rank,numProcS);
+            //            std::cout<<"sample rank : "<<getStatisticalRank(mpi_rank,numProcS) <<std::endl;
+
 
                 int norm_samples = nsamples;
                 const size_t ndata = (ngx*2+nx)*(ny+2*ngy)*(nz+2*ngz);
                 double avrg_data[ndata];
                 double avrg_sqr_data[ndata];
-PRINTL
+
                 MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, spatialComm); //getSpatialRank(mpi_rank, numProcS)
-PRINTL
+
                 double sqr_variable_data[ndata];
                 //get squared sum to use for variance, reuse variable_data to save space
                 for (int i = 0; i< ndata; ++i) {
                         sqr_variable_data[i] = variable_data[i]*variable_data[i];
                 }
-PRINTL
+
                 MPI_Reduce(&sqr_variable_data, avrg_sqr_data, ndata, MPI_DOUBLE, MPI_SUM, 0, spatialComm);
 
-                if( getStatisticalRank(mpi_rank, numProcS) == 0 )
+                if( mpi_spatialRank == 0 )
                 {
-PRINTL
-                int extend[6]  = {0, multiXproc*(nx-1),0,multiYproc*(ny-1),0,multiZproc*(nz-1)};
+
+
+                  int mpi_statRank; // is the same as the spatial Rank
+                  MPI_Comm_rank(coproc_comm, &mpi_statRank);
+
+                  if(mpi_statRank != getSpatialRank(mpi_rank, numProcS))
+                  {
+                      std::cout<< " ATTENTION !!!!!!!!!!"<<std::endl;
+
+                  }
+
 
                 if(VTKImage == NULL)
                 {
+                        int extend[6]  = {0, multiXproc*nx-1,0,multiYproc*ny-1,0,multiZproc*nz-1};
                         VTKImage = vtkImageData::New();
                         VTKImage->SetExtent(extend);
                 }
@@ -199,12 +219,12 @@ PRINTL
                         VTKGrid = vtkMultiBlockDataSet::New();
                         vtkNew<vtkMultiPieceDataSet> multiPiece;
                         multiPiece->SetNumberOfPieces(numProcS);
-                        multiPiece->SetPiece( getStatisticalRank(mpi_rank, numProcS), VTKImage);
+                        multiPiece->SetPiece( getSpatialRank(mpi_rank, numProcS), VTKImage);
                         VTKGrid->SetNumberOfBlocks(1);
                         VTKGrid->SetBlock(0, multiPiece.GetPointer());
 
                 }
-PRINTL
+
                 fillGrid(mpi_rank, numProcS, multiXproc,multiYproc, multiZproc, variable_name,  nx,  ny,  nz, ngx,  ngy,  ngz, avrg_data, avrg_sqr_data, norm_samples);
 PRINTL
           }
@@ -240,7 +260,7 @@ DLL_ADAPTOR_EXPORT void set_parameter(void* parameters, const char* key,
 
 DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
                                      MPI_Comm communicator) {
-PRINTL
+
         auto my_parameters = static_cast<MyParameters*>(parameters);
         std::string mb = my_parameters->getParameter("multiblock");
         const int multiXproc = std::stoi(mb.substr(0,1) );
@@ -258,28 +278,26 @@ PRINTL
         //check if we can run all in parallel:
         int nSamples = std::stoi(my_parameters->getParameter("samples"));
 
-
-        MPI_Comm tmp_comm;
-        MPI_Comm_dup(my_parameters->getMPIComm(), &tmp_comm);
-
         //create the spatial communicators:
-        MPI_Comm_split(tmp_comm, getSpatialRank(mpi_rank, numProcS), mpi_rank, &spatialComm);
+        MPI_Comm_split(my_parameters->getMPIComm(), getSpatialRank(mpi_rank, numProcS), mpi_rank, &spatialComm);
+        int mpi_spatialRank; // is the same as the sampleRank
+        MPI_Comm_rank(spatialComm, &mpi_spatialRank);
+
 
         //create the communicator for catalyst: includes all the firs sample ranks
-        if( getStatisticalRank(mpi_rank, numProcS) == 0)
+        if(mpi_spatialRank == 0)
         {
-                MPI_Comm_split(my_parameters->getMPIComm(), 0, mpi_rank, &coproc_comm);
+                MPI_Comm_split(my_parameters->getMPIComm(),0, mpi_rank, &coproc_comm);
         }else{
                 MPI_Comm_split(my_parameters->getMPIComm(), MPI_UNDEFINED, mpi_rank, &coproc_comm);
         }
 
-    //    MPI_Comm_free(&tmp_comm);
 
-        if(getStatisticalRank(mpi_rank, numProcS) == 0)
+        if(mpi_spatialRank == 0)
         {
-PRINTL
 
-              if (Processor == NULL) //TODO how many tome can this be done?
+
+              if (Processor == NULL)
                 {
 
                         Processor = vtkCPProcessor::New();
@@ -289,7 +307,6 @@ PRINTL
                 }
                 else
                 {
-
                         Processor->RemoveAllPipelines();
                 }
 
@@ -308,7 +325,6 @@ PRINTL
                                 std::cout<<"only default pipeline script: "<< script_default<<std::endl;
                                 pipeline->Initialize(script_default);
                                 Processor->AddPipeline(pipeline);
-                                PRINTL
                         }
                         else
                         {
@@ -319,7 +335,11 @@ PRINTL
                         }
 
       }
-      PRINTL
+
+  //  make sure everything is set up
+  MPI_Barrier(my_parameters->getMPIComm());
+  PRINTL
+
 }
 
 
@@ -331,7 +351,10 @@ DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
         MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
         std::cout<<"mpi rank : "<<mpi_rank<< " at time "<< time<<std::endl;
 
-        if(mpi_rank==0) {
+        int mpi_spatialRank; // is the same as the sampleRank
+        MPI_Comm_rank(spatialComm, &mpi_spatialRank);
+
+        if(mpi_spatialRank==0) {
 
                 auto my_data = static_cast<MyData*>(data);
                 my_data->setCurrentTimestep(timestep_number);
@@ -357,8 +380,11 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
         MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
         //    std::cout<<"mpi rank : "<<mpi_rank<< " at 1 end time "<< time<<std::endl;
 
-        if(mpi_rank==0)
-        {
+        int mpi_spatialRank; // is the same as the sampleRank
+        MPI_Comm_rank(spatialComm, &mpi_spatialRank);
+
+        if(mpi_spatialRank==0) {
+          PRINTL
                 dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
                 dataDescription->ForceOutputOn();
                 if(Processor->RequestDataDescription(dataDescription)!=0 )
@@ -374,7 +400,7 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
 
 
 DLL_ADAPTOR_EXPORT void delete_data(void* data) {
-
+PRINTL
         std::cout << "In delete_data" << std::endl;
         if (Processor)
         {

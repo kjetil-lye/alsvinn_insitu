@@ -5,9 +5,9 @@ import os
 import subprocess
 
 
-dryrun = True
-wtime ="24"
-nnodes = "100"
+dryrun = False
+wtime ="1"
+nnodes = "1"
 dim ="3"
 
 ns = ["64","128","256"]
@@ -22,7 +22,7 @@ alsvinn = "/users/rhohl/alsvinn/build/alsuqcli/alsuqcli" # "/cluster/home/hohlr/
 for n in ns:
     for i in range(0,len(cases)):
         c = cases[i] 
-        xmlname = basedir+"benchmarkDaint/inputfiles_"+dim+"d_1sample/benchmark_"+xmlcases[i]+"_"+n+".xml"
+        xmlname = basedir+"benchmarkDaint/inputfiles_"+dim+"d_1samples/benchmark_"+xmlcases[i]+"_"+n+".xml"
         if(int(nnodes)>1):
         	xmlname = basedir+"benchmarkDaint/inputfiles_"+dim+"d_"+nnodes+"samples/benchmark_"+xmlcases[i]+"_"+n+".xml"
 	jobname = xmlcases[i]+"_"+n+"_"+dim+"d_"+nnodes
@@ -41,7 +41,7 @@ for n in ns:
 	print alsvinn
 	if(not dryrun):
 		subprocess.check_call(["cp", xmlname, "."], cwd = newfolder)
-		subprocess.check_call(["cp",  basedir+"benchmarkDaint/inputfiles_"+dim+"d_"+nnodes+"samples/*.py" , "."], cwd = newfolder)
+		subprocess.check_call(["cp",  basedir+"benchmarkDaint/inputfiles_"+dim+"d_"+nnodes+"samples/kelvinhelmholtz_3d_tube.py" , "."], cwd = newfolder)
         totcommand = alsvinn+ " " + xmlname 
         if(int(nnodes)>1):
 		totcommand = alsvinn+ " --multi-sample "+nnodes+" " + xmlname 

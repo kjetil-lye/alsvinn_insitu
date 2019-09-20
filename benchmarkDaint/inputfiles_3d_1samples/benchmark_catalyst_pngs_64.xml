@@ -7,11 +7,11 @@
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 1</upperCorner>
-    <dimension>128 128 128</dimension>
+    <dimension>64 64 64</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>2</endTime>
+  <endTime>4</endTime>
   <equation>euler3</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -50,7 +50,7 @@
       <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
-      <endTime>2</endTime>
+      <endTime>4</endTime>
       <basename>none</basename>
         <samples>1</samples>
       <catalystscript>../pythonScripts/generic3d.py</catalystscript>
@@ -63,7 +63,7 @@
   <parameters>
     <parameter>
       <name>a</name>
-      <length>40</length>
+      <length>60</length>
       <type>uniform</type>
     </parameter>
   </parameters>

@@ -43,6 +43,7 @@ MPI_Comm* getMPICommPtr() {
 private:
 std::map<std::string, std::string> parameters;
 
+
 MPI_Comm mpiComm;
 
 

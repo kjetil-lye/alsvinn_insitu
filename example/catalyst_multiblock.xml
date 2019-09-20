@@ -1,18 +1,18 @@
 <config>
 <fvm>
   <name>
-    kh
+    kh3d
   </name>
   <platform>cpu</platform>
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
-    <upperCorner>1 1 0</upperCorner>
-    <dimension>2048 2048 1</dimension>
+    <upperCorner>1 1 1</upperCorner>
+    <dimension>16 16 16</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>2</endTime>
-  <equation>euler2</equation>
+  <endTime>1</endTime>
+  <equation>euler3</equation>
   <equationParameters>
     <gamma>1.4</gamma>
   </equationParameters>
@@ -20,13 +20,15 @@
   <cfl>auto</cfl>
   <integrator>auto</integrator>
   <functionals>
+
+
   </functionals>
   <initialData>
-    <python>kelvinhelmholtz.py</python>
+    <python>kelvinhelmholtz_3d_tube.py</python>
     <parameters>
       <parameter>
         <name>a</name>
-        <length>40</length>
+        <length>60</length>
         <values><value>0</value></values>
       </parameter>
     </parameters>
@@ -48,13 +50,16 @@
       <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
-      <endTime>2</endTime>
+      <endTime>1</endTime>
       <basename>none</basename>
-      <numberOfSaves>40</numberOfSaves>
+        <samples>2</samples>
+        <multiblock>2 1 1</multiblock>
+      <catalystscript>../pythonScripts/gridwriter.py</catalystscript>
+      <numberOfSaves>2</numberOfSaves>
     </writer>
 </fvm>
 <uq>
-  <samples>1</samples>
+  <samples>2</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>

@@ -1,3 +1,7 @@
+#the cmakelists in adaptor (is different on latop)
+adaptor/CMakeLists.txt
+
+
 # Prerequisites
 *.d
 

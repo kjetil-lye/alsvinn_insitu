@@ -3,16 +3,16 @@
   <name>
     kh3d
   </name>
-  <platform>cpu</platform>
+  <platform>cuda</platform>
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
     <upperCorner>1 1 1</upperCorner>
-    <dimension>256 256 256</dimension>
+    <dimension>512 512 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
   <endTime>2</endTime>
-  <equation>euler3</equation>
+  <equation>euler2</equation>
   <equationParameters>
     <gamma>1.4</gamma>
   </equationParameters>
@@ -24,7 +24,7 @@
 
   </functionals>
   <initialData>
-    <python>kelvinhelmholtz_3d_tube.py</python>
+    <python>kelvinhelmholtz.py</python>
     <parameters>
       <parameter>
         <name>a</name>
@@ -52,13 +52,14 @@
       <end_timestep_function>end_timestep</end_timestep_function>
       <endTime>2</endTime>
       <basename>none</basename>
-        <samples>1</samples>
-      <catalystscript>../pythonScripts/generic3d.py</catalystscript>
+        <samples>10</samples>
+        <multiblock>2 2 1</multiblock>
+      <catalystscript>../pythonScripts/generic2d_mb.py</catalystscript>
       <numberOfSaves>100</numberOfSaves>
     </writer>
 </fvm>
 <uq>
-  <samples>1</samples>
+  <samples>10</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>

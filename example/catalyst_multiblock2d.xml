@@ -1,17 +1,17 @@
 <config>
 <fvm>
   <name>
-    kh
+    kh3d
   </name>
-  <platform>cuda</platform>
+  <platform>cpu</platform>
   <grid>
     <lowerCorner>0 0 0</lowerCorner>
-    <upperCorner>1 1 0</upperCorner>
+    <upperCorner>1 1 1</upperCorner>
     <dimension>64 64 1</dimension>
   </grid>
   <boundary>periodic</boundary>
   <flux>hll3</flux>
-  <endTime>3</endTime>
+  <endTime>1</endTime>
   <equation>euler2</equation>
   <equationParameters>
     <gamma>1.4</gamma>
@@ -20,13 +20,15 @@
   <cfl>auto</cfl>
   <integrator>auto</integrator>
   <functionals>
+
+
   </functionals>
   <initialData>
     <python>kelvinhelmholtz.py</python>
     <parameters>
       <parameter>
         <name>a</name>
-        <length>40</length>
+        <length>60</length>
         <values><value>0</value></values>
       </parameter>
     </parameters>
@@ -48,15 +50,16 @@
       <set_mpi_comm_function>set_mpi_comm</set_mpi_comm_function>
       <new_timestep_function>new_timestep</new_timestep_function>
       <end_timestep_function>end_timestep</end_timestep_function>
-      <endTime>3</endTime>
-      <basename>meanVar</basename>
-      <numberOfSaves>10</numberOfSaves>
-      <samples>3</samples>
-    <catalystscript>../pythonScripts/generic2d.py</catalystscript>
+      <endTime>1</endTime>
+      <basename>none</basename>
+        <samples>2</samples>
+        <multiblock>2 1 1</multiblock>
+      <catalystscript>../pythonScripts/generic2d_mb.py</catalystscript>
+      <numberOfSaves>4</numberOfSaves>
     </writer>
 </fvm>
 <uq>
-  <samples>3</samples>
+  <samples>2</samples>
   <generator>auto</generator>
   <parameters>
     <parameter>
@@ -68,4 +71,5 @@
   <stats>
   </stats>
 </uq>
+
 </config>

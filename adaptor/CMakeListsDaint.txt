@@ -2,10 +2,8 @@ include(GenerateExportHeader)
 SET(MPI_CXX_SKIP_MPICXX ON)
 
 
-find_package(ParaView REQUIRED)
-
+find_package(ParaView REQUIRED COMPONENTS vtkPVCatalyst vtkPVVTKExtensionsDefault vtkPVClientServerCoreCore)
 find_package(MPI REQUIRED)
-
 set(adaptor_SRCS
   src/dll_adaptor.cpp
   src/isosurfaceVtkPipeline.cpp
@@ -18,8 +16,7 @@ GENERATE_EXPORT_HEADER( dll_adaptor
              EXPORT_MACRO_NAME DLL_ADAPTOR_EXPORT
              EXPORT_FILE_NAME dll_adaptor_exports.h
 )
-target_link_libraries(dll_adaptor PUBLIC VTK::PythonUsed
-ParaView::PythonCatalyst VTK::CommonDataModel VTK::mpi)##vtkPVPythonCatalyst vtkPVVTKExtensionsDefault vtkPVClientServerCoreCore) #LINK_PRIVATE
+target_link_libraries(dll_adaptor PUBLIC vtkPVPythonCatalyst vtkPVVTKExtensionsDefault vtkPVClientServerCoreCore) #LINK_PRIVATE
 target_link_libraries(dll_adaptor PUBLIC  MPI::MPI_C)
 
 target_include_directories(dll_adaptor PUBLIC
@@ -27,5 +24,3 @@ target_include_directories(dll_adaptor PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/>
     $<INSTALL_INTERFACE:include>
     )
-#include(vtkModuleMacros)
-#include(vtkMPI)

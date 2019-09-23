@@ -54,7 +54,7 @@
       <basename>none</basename>
         <samples>2</samples>
         <multiblock>2 1 1</multiblock>
-      <catalystscript>../pythonScripts/gridwriter.py</catalystscript>
+      <catalystscript>../pythonScripts/generic3d_mb_surface.py</catalystscript>
       <numberOfSaves>2</numberOfSaves>
     </writer>
 </fvm>

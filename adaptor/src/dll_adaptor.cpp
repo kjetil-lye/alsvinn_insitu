@@ -104,7 +104,6 @@ void fillGrid(int mpi_rank, int numProcS, int multiXproc,int multiYproc, int mul
         if (!dataSet->GetPointData()->GetArray((std::string(variable_name)+"_var").c_str()))
         {    // Create a field associated with points
                 vtkDoubleArray* field_array_var = vtkDoubleArray::New();
-
                 field_array_var->SetNumberOfComponents(1);
                 field_array_var->SetNumberOfTuples(ntuples);
                 field_array_var->SetName( (std::string(variable_name)+"_var").c_str() );
@@ -118,8 +117,6 @@ void fillGrid(int mpi_rank, int numProcS, int multiXproc,int multiYproc, int mul
 
         int localIndex = 0;
         int globalIndex = 0;
-
-
 
 // ignoring ghost cells (ngy is number of ghost cells in z direction)
         for (int z = ngz; z < nz + ngz; ++z) {
@@ -140,8 +137,7 @@ void fillGrid(int mpi_rank, int numProcS, int multiXproc,int multiYproc, int mul
                 }
 
         }
-        std::cout<< " MAX global "<< globalIndex <<" with local "<<localIndex << "with ntuples: "<<ntuples <<std::endl;
-
+    //    std::cout<< " MAX global "<< globalIndex <<" with local "<<localIndex << "with ntuples: "<<ntuples <<std::endl;
 }
 
 
@@ -155,9 +151,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                           int ngx, int ngy, int ngz, double ax, double ay, double az, double bx,
                                           double by, double bz, int gpu_number )
 {
-
-
-                auto my_data = static_cast<MyData*>(data);
+                //auto my_data = static_cast<MyData*>(data);
                 auto my_parameters = static_cast<MyParameters*>(parameters);
 
                 std::string mb = my_parameters->getParameter("multiblock");
@@ -209,7 +203,6 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
 
                         if (VTKGrid == NULL)
                         {
-
                                 int x_dom = mpi_statRank%multiXproc;
                                 int y_dom = (mpi_statRank/multiXproc)%multiYproc;
                                 int z_dom = mpi_statRank/multiYproc/multiXproc;
@@ -225,7 +218,6 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
 
                                 std::cout<< "=============================  doms: "<<x_dom<<" "<<y_dom<<" " <<z_dom <<"extend : "<< extend[0]<< " "<<extend[1]<< " "<<extend[2]<< " "<<extend[3]<< " "<<extend[4]<< " "<<extend[5]<<std::endl;
 
-
                                 vtkImageData* VTKImage = vtkImageData::New();
                                 VTKImage->SetOrigin(0, 0, 0);
                                 VTKImage->SetExtent(extend);
@@ -235,21 +227,15 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                 multiPiece->SetNumberOfPieces(numProcS);
                                 multiPiece->SetPiece( mpi_statRank, VTKImage);
 
-
                                 VTKGrid->SetNumberOfBlocks(1);
                                 VTKGrid->SetBlock(0, multiPiece.GetPointer());
                         }
 
                         fillGrid(mpi_rank, numProcS, multiXproc,multiYproc, multiZproc, variable_name,  nx,  ny,  nz, ngx,  ngy,  ngz, avrg_data, avrg_sqr_data, norm_samples);
-
+          
                         dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
-
                 }
-
         }
-
-
-
 
 
 DLL_ADAPTOR_EXPORT void* make_parameters() {
@@ -288,7 +274,6 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
         const int multiZproc = std::stoi(mb.substr(4,1) );
         const int numProcS = multiXproc*multiYproc*multiZproc;
 
-
         my_parameters->setMPIComm(communicator);
         int mpi_rank;
         MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
@@ -317,7 +302,6 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
         {
                 if (Processor == NULL)
                 {
-
                         Processor = vtkCPProcessor::New();
                         Comm = new vtkMPICommunicatorOpaqueComm(&coproc_comm );
                         Processor->Initialize(*Comm);
@@ -333,7 +317,6 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
 
                 vtkNew<vtkCPPythonScriptPipeline> pipeline;
 
-
                 // png etc script
                 const std::string script_str = my_parameters->getParameter("catalystscript");
                 const char *script_loc = script_str.c_str();
@@ -346,15 +329,14 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
                 }
                 else
                 {
-
-                        std::cout<<"pipeline script: "<< script_loc<<std::endl;
+                       std::cout<<"pipeline script: "<< script_loc<<std::endl;
                         pipeline->Initialize(script_loc);
                         Processor->AddPipeline(pipeline);
                 }
 
         }
 
-        //  make sure everything is set up
+        //  make sure everything is set up before continue
         MPI_Barrier(my_parameters->getMPIComm());
 }
 
@@ -370,18 +352,10 @@ DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
         int mpi_spatialRank; // is the same as the sampleRank
         MPI_Comm_rank(spatialComm, &mpi_spatialRank);
 
-        if(mpi_spatialRank==0) {
-
-                auto my_data = static_cast<MyData*>(data);
-                my_data->setCurrentTimestep(timestep_number);
-                my_data->setCurrentTime(time);
-                my_data->setNewTimestep(true);
-
-                if(time >= std::stoi(my_parameters->getParameter("endTime"))) {
-                        my_data->setEndTimeStep(true);
-                }
+        if(mpi_spatialRank==0)
+        {
                 dataDescription = vtkCPDataDescription::New();
-                dataDescription->SetTimeData(time, timestep_number); //my_data->getCurrentTime(), my_data->getCurrentTimestep());
+                dataDescription->SetTimeData(time, timestep_number); 
                 dataDescription->AddInput("input");
         }
 
@@ -426,18 +400,17 @@ DLL_ADAPTOR_EXPORT void delete_data(void* data) {
                 VTKGrid = NULL;
         }
 
-
         if (Comm)
         {
                 delete Comm;
                 Comm = NULL;
         }
+
         if(coproc_comm)
         {
-
                 MPI_Comm_free(&coproc_comm);
-
         }
+        
         if(spatialComm)
         {
                 MPI_Comm_free(&spatialComm);

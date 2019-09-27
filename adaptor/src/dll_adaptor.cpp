@@ -242,7 +242,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
 
                         fillGrid(mpi_rank, numProcS, multiXproc,multiYproc, multiZproc, variable_name,  nx,  ny,  nz, ngx,  ngy,  ngz, avrg_data, avrg_sqr_data, norm_samples);
 
-                        dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
+                //        dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
 
                 }
 
@@ -400,7 +400,7 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
         MPI_Comm_rank(spatialComm, &mpi_spatialRank);
 
         if(mpi_spatialRank==0) {
-                //    dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
+                    dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
                 dataDescription->ForceOutputOn();
                 if(Processor->RequestDataDescription(dataDescription)!=0 )
                 {

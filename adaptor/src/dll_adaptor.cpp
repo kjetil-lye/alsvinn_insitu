@@ -26,7 +26,7 @@
 #include <vtkMultiProcessController.h>
 
 #define PRINTL { int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank); std::cerr << "In GLOBAL RANK " << rank << ", at line: " <<__LINE__ << std::endl; }
-#define PV_NUM_THREADS=8;
+#define PV_NUM_THREADS 2
 
 // Simple macro to print parameters
 #define PRINT_PARAM(X) std::cout << "Value of " << #X << " is " << X << std::endl
@@ -34,21 +34,10 @@ extern "C" {
 
 
 vtkCPProcessor* Processor = NULL;
-vtkMultiBlockDataSet* VTKGrid = NULL;
-vtkImageData* VTKImage = NULL;
+vtkImageData* VTKGrid = NULL;
 MPI_Comm pvComm;
-MPI_Comm coproc_comm;
 vtkMPICommunicatorOpaqueComm* Comm = NULL;
 vtkCPDataDescription*  dataDescription = NULL;  //vtkCPDataDescription::New();
-
-
-inline int getSpatialRank(int globalR, int numProcS){
-        return globalR%numProcS;
-};
-
-inline int getStatisticalRank(int globalR, int numProcS){
-        return globalR/numProcS;
-};
 
 
 
@@ -142,13 +131,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 int mpi_size;
                 MPI_Comm_size(my_parameters->getMPIComm(), &mpi_size);
 
-                int mpi_pvRank; // is the same as the sampleRank
-                MPI_Comm_rank(pvComm, &mpi_pvRank);
-
-                int mpi_pvSize; // is the same as number of samples
-                MPI_Comm_size(pvComm, &mpi_pvSize);
-
-                //check if we can run all in parallel:
+                       //check if we can run all in parallel:
                 int nsamples = std::stoi(my_parameters->getParameter("samples"));
                 if(mpi_size < nsamples) {
                         std::cerr<< "warning: not enough mpi nodes,  reduce sample size to number of mpi nodes: "<< mpi_size<<std::endl;
@@ -161,26 +144,23 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 double avrg_data[ndata];
                 double avrg_sqr_data[ndata];
 
-                MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm()); //getSpatialRank(mpi_rank, numProcS)
-
+                MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
                 MPI_Op op;
                 MPI_Op_create( (MPI_User_function *)addsquared, 1, &op);
                 MPI_Reduce(variable_data, avrg_sqr_data, ndata, MPI_DOUBLE, op,0, my_parameters->getMPIComm());
 
-                MPI_Bcast(avrg_data, ndata,MPI_DOUBLE,0, pvComm)
-                MPI_Bcast(avrg_sqr_data, ndata,MPI_DOUBLE,0, pvComm)
 
-
-                if( mpi_rank < mpi_pvSize )
+                if( mpi_rank < PV_NUM_THREADS )
                 {
-                        int mpi_statRank; // is the same as the spatialRank
-                        MPI_Comm_rank(coproc_comm, &mpi_statRank);
+                  MPI_Bcast(avrg_data, ndata,MPI_DOUBLE,0, pvComm);
+                  MPI_Bcast(avrg_sqr_data, ndata,MPI_DOUBLE,0, pvComm);
 
-                            if (VTKGrid == NULL)
+
+                        if (VTKGrid == NULL)
                             {
                                 int extend[6]  = {0,nx-1,0,ny-1,0,nz-1};
                                     VTKGrid = vtkImageData::New();
-                                    VTKImage->SetOrigin(0, 0, 0);
+                                     VTKGrid->SetOrigin(0, 0, 0);
                                     VTKGrid->SetExtent(extend);
                             }
 
@@ -237,9 +217,9 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
         //create the communicator for catalyst: includes all the firs sample ranks
         if(mpi_rank < PV_NUM_THREADS)
         {
-                MPI_Comm_split(my_parameters->getMPIComm(),0, mpi_rank, &pv_Comm);
+                MPI_Comm_split(my_parameters->getMPIComm(),0, mpi_rank, &pvComm);
         }else{
-                MPI_Comm_split(my_parameters->getMPIComm(), MPI_UNDEFINED, mpi_rank, &pv_Comm );
+                MPI_Comm_split(my_parameters->getMPIComm(), MPI_UNDEFINED, mpi_rank, &pvComm );
         }
 
 
@@ -249,7 +229,7 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
                 {
 
                         Processor = vtkCPProcessor::New();
-                        Comm = new vtkMPICommunicatorOpaqueComm(&pv_Comm );
+                        Comm = new vtkMPICommunicatorOpaqueComm(&pvComm );
                         Processor->Initialize(*Comm);
                         std::cout << "rank " << mpi_rank << " : initialized processor with comm "<<Comm->GetHandle() << std::endl;
                 }
@@ -297,9 +277,6 @@ DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
         MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
         std::cout<<"mpi rank : "<<mpi_rank<< " at time "<< time<<std::endl;
 
-        int mpi_pvRank; // is the same as the sampleRank
-        MPI_Comm_rank(pvComm, &mpi_pvRank);
-
         if(mpi_rank < PV_NUM_THREADS) {
 
                 dataDescription = vtkCPDataDescription::New();
@@ -318,7 +295,7 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
         MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
         //    std::cout<<"mpi rank : "<<mpi_rank<< " at 1 end time "<< time<<std::endl;
 
-       
+
         if(mpi_rank < PV_NUM_THREADS)
          {
           dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
@@ -355,13 +332,7 @@ DLL_ADAPTOR_EXPORT void delete_data(void* data) {
                 delete Comm;
                 Comm = NULL;
         }
-        if(coproc_comm)
-        {
-
-                MPI_Comm_free(&coproc_comm);
-
-        }
-        if(pvComm)
+             if(pvComm)
         {
                 MPI_Comm_free(&pvComm);
         }

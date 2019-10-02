@@ -26,7 +26,7 @@
 #include <vtkMultiProcessController.h>
 
 #define PRINTL { int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank); std::cerr << "In GLOBAL RANK " << rank << ", at line: " <<__LINE__ << std::endl; }
-#define PV_NUM_THREADS 2
+#define PV_NUM_THREADS 1
 
 // Simple macro to print parameters
 #define PRINT_PARAM(X) std::cout << "Value of " << #X << " is " << X << std::endl

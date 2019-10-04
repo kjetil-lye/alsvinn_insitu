@@ -27,9 +27,6 @@ from paraview.simple import *
 from paraview import coprocessing
 outputfrequency= 1
 
-print " in line : ", lineno()
-    # =================================OUTPUT DEFINITIONS================================
-
         # =================================OUTPUT DEFINITIONS================================
 def getFields():
     return [['E_mean', 0], ['E_var', 0], ['mx_mean', 0], ['mx_var', 0], ['my_mean', 0], ['my_var', 0], ['mz_mean', 0], ['mz_var', 0], ['rho_mean', 0], ['rho_var', 0]]
@@ -43,7 +40,7 @@ def getImageSize(nx,nz,ny):
     w = min(hdw, (d-1)*max(nx,ny,nz))
     h = min(hdh, (d-1)*max(nx,ny,nz))
     return w,h
-print " in line : ", lineno()
+
 
 def getRGBPoints(vname):
     #same order as getFields()
@@ -111,11 +108,9 @@ def CreateCoProcessor():
 
         #  grid = input.GetClientSideObject().GetOutputDataObject(0)
           fieldname =  fields[ifield][0]
-    #      print(fieldname)
-
-         # pixelw,pixelh = getImageSize(64,64,64)
+              # pixelw,pixelh = getImageSize(64,64,64)
           pixelw,pixelh = 1920,1080
-          print " in line : ", lineno()
+
           #### disable automatic camera reset on 'Show'
           paraview.simple._DisableFirstRenderCameraReset()
 
@@ -150,15 +145,12 @@ def CreateCoProcessor():
           # ----------------------------------------------------------------
           # restore active view
           SetActiveView(renderView1)
-          # ----------------------------------------------------------------
-          print " in line : ", lineno()
           mergeBlocks1 = MergeBlocks(Input=input)
 
 
           # show data from input
           inputDisplay =  Show(mergeBlocks1, renderView1)
-          print " in line : ", lineno()
-
+          
             # rescale color and/or opacity maps used to include current data range
     #      inputDisplay.RescaleTransferFunctionToDataRange(True, True)
 

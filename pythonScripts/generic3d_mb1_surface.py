@@ -1,11 +1,4 @@
 
-#--------------------------------------------------------------
-import inspect
-
-def lineno():
-    return inspect.currentframe().f_back.f_lineno
-
-
 # Global timestep output options
 timeStepToStartOutputAt=0
 forceOutputAtFirstCall=False
@@ -27,8 +20,7 @@ from paraview.simple import *
 from paraview import coprocessing
 outputfrequency= 1
 
-print " in line : ", lineno()
-    # =================================OUTPUT DEFINITIONS================================
+
 
         # =================================OUTPUT DEFINITIONS================================
 def getFields():
@@ -43,7 +35,7 @@ def getImageSize(nx,nz,ny):
     w = min(hdw, (d-1)*max(nx,ny,nz))
     h = min(hdh, (d-1)*max(nx,ny,nz))
     return w,h
-print " in line : ", lineno()
+
 
 def getRGBPoints(vname):
     #same order as getFields()
@@ -111,12 +103,9 @@ def CreateCoProcessor():
 
         #  grid = input.GetClientSideObject().GetOutputDataObject(0)
           fieldname =  fields[ifield][0]
-    #      print(fieldname)
-
-         # pixelw,pixelh = getImageSize(64,64,64)
+          # pixelw,pixelh = getImageSize(64,64,64)
           pixelw,pixelh = 1920,1080
-          print " in line : ", lineno()
-          #### disable automatic camera reset on 'Show'
+           #### disable automatic camera reset on 'Show'
           paraview.simple._DisableFirstRenderCameraReset()
 
           # Create a new 'Render View'

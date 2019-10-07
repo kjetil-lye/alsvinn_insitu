@@ -53,8 +53,7 @@ def CreateCoProcessor():
   class CoProcessor(coprocessing.CoProcessor):
     def CreatePipeline(self, datadescription):
       self.Pipeline = _CreatePipeline(self, datadescription)
-      print(" ==========================================================", datadescription.GetUserData().GetNumberOfArrays())
-
+     
 
   coprocessor = CoProcessor()
   freqs = {'input': [outputfrequency]}

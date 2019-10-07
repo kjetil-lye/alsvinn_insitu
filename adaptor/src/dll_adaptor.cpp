@@ -42,8 +42,8 @@ void make_histogramVTK(const char* variable_name, const int pntidx,  double* val
                       const double min, const double max, const int nbins,
                       vtkFloatArray* bins, vtkIntArray* hist);
 
-void write_histogramVTK(const char* variable_name, const int pntidx,  double* values, const int values_size,
-                      const double min, const double max, const int nbins);
+void write_histogram(const char* variable_name, const int pntidx,  double* values, const int values_size,
+                      const double min, const double max,  const int nbins, const std::string path);
 
 
 vtkCPProcessor* Processor = NULL;
@@ -368,40 +368,42 @@ void make_pdf( const char* variable_name, const int pntidx,  double* values, con
 
 
 
-void write_histogram( const char* variable_name, const int pntidx,  double* values, const int values_size, const double min, const double max, const int nbins)
+void write_histogram( const char* variable_name, const int pntidx,  double* values, const int values_size, const double min, const double max, const int nbins, const std::string path)
 {
     //    float bins[nbins];
         int hist[nbins] = {0};
 
         const double delta = (max-min)/double(nbins-1);
-        std::string name = "./historgrams/hist_"+std::string(variable_name)+ std::to_string(pntidx);
-        ofstream fs;
-        fs.open(outputFile,name);
+
+        std::string name = path+"hist_"+std::string(variable_name)+ std::to_string(pntidx)+".csv";
+        std::fstream outfile;
+        outfile.open(name,   std::fstream::out  );
 
    // write the file headers
 
-        outputFile<<" bins = [ "
-        for(int i =0; i< nbins; i++)
+        outfile<<" bins = ["<<min;
+        for(int i =1; i< nbins; i++)
         {
               //  bins[i] = i*delta;
-              //  hist[i]=0;
-                outputFile << i*delta <<",";
+            //    hist[i]=0;
+                outfile <<","<< min+i*delta;
         }
 
-          outputFile<<" ]"<<std::endl;
-          outputFile<<" values = [ "
+          outfile<<" ]"<<std::endl;
+
         for(int i =0; i< values_size; i++)
         {
                 int idx = std::floor((*(values+i)-min) /delta);
                 hist[idx] += 1;
         }
 
-        for(int i =0; i< nbins; i++)
+        outfile<<" values = [ "<<hist[0];
+        for(int i =1; i< nbins; i++)
         {
-                outputFile<< " " << hist[i];
+                outfile<< ", " << hist[i];
         }
-        outputFile<<" ]"<<std::endl;
-
+        outfile<<" ]"<<std::endl;
+        outfile.close();
 
 }//end_make_histogram
 
@@ -478,7 +480,7 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
                           for ( int i =0; i<nii; i++)
                           {
                                   int idx = idxOfInterest[i];
-                                  std::cout<< "rank, pt " << mpi_rank << " "<< idx<<" " <<*(variable_data+idx)<<std::endl;
+                //                  std::cout<< "rank, pt " << mpi_rank << " "<< idx<<" " <<*(variable_data+idx)<<std::endl;
                                   MPI_Gather(variable_data+idx, 1,  MPI_DOUBLE,  pnt_values+(i*nsamples), 1, MPI_DOUBLE, 0,  my_parameters->getMPIComm());
                           }
 
@@ -498,15 +500,11 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
 
                   if(mpi_rank == 0)
                   {
-                          auto my_data = static_cast<MyData*>(data);
-
-
+                                  const std::string path = my_parameters->getParameter("histfolder");
                                   //historgram calculcation for specifc points only;
-                                  const int nbins = 5;
-
-
-                                //  histGrid = vtkBlankStructuredGrid::New();
-                            //      vtkFieldData* histfield =vtkFieldData::New();
+                                  const int nbins = std::stoi(my_parameters->getParameter("histnbins"));
+                                  //  histGrid = vtkBlankStructuredGrid::New();
+                                  //      vtkFieldData* histfield =vtkFieldData::New();
 
                                   for ( int i =0; i<nii; i++)
                                    {
@@ -518,7 +516,7 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
                                           auto minmax = std::minmax_element(pnt_values+(i*nsamples),pnt_values+(i+1)*nsamples );
                                       //    make_histogram( variable_name, idxOfInterest[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second), nbins,  bins,  hist );
 
-                                          write_histogram(  variable_name, idxOfInterest[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second),  nbins);
+                                          write_histogram(  variable_name, idxOfInterest[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second),  nbins, path);
 
                                           //TODO send historgram to paraview forr all points, e.g. put into blanked out grid
                                       //    histfield->AddArray(bins);

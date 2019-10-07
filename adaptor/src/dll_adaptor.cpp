@@ -40,7 +40,7 @@ vtkMPICommunicatorOpaqueComm* Comm = NULL;
 vtkCPDataDescription*  dataDescription = NULL;  //vtkCPDataDescription::New();
 
 
-
+/*
 void addsquared(double *, double *, int *, MPI_Datatype *);
 
 void addsquared(double *in, double *out, int *len, MPI_Datatype *)
@@ -49,7 +49,7 @@ void addsquared(double *in, double *out, int *len, MPI_Datatype *)
         for ( i=0; i<*len; i++ )
                 out[i] += in[i]*in[i];
 }
-
+*/
 
 
 DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
@@ -144,11 +144,15 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 double avrg_data[ndata];
                 double avrg_sqr_data[ndata];
 
-                MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
-                MPI_Op op;
-                MPI_Op_create( (MPI_User_function *)addsquared, 1, &op);
-                MPI_Reduce(variable_data, avrg_sqr_data, ndata, MPI_DOUBLE, op,0, my_parameters->getMPIComm());
+                 MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
 
+                double sqr_variable_data[ndata];
+                //get squared sum to use for variance, reuse variable_data to save space
+                for (int i = 0; i< ndata; ++i) {
+                        sqr_variable_data[i] = variable_data[i]*variable_data[i];
+                }
+
+                MPI_Reduce(&sqr_variable_data, avrg_sqr_data, ndata, MPI_DOUBLE, MPI_SUM, 0, my_parameters->getMPIComm());
 
                 if( mpi_rank < PV_NUM_THREADS )
                 {

@@ -50,7 +50,7 @@ inline int getStatisticalRank(int globalR, int numProcS){
 };
 
 
-
+/*
 void addsquared(double *, double *, int *, MPI_Datatype *);
 
 void addsquared(double *in, double *out, int *len, MPI_Datatype *)
@@ -59,7 +59,7 @@ void addsquared(double *in, double *out, int *len, MPI_Datatype *)
         for ( i=0; i<*len; i++ )
                 out[i] += in[i]*in[i];
 }
-
+*/
 
 
 DLL_ADAPTOR_EXPORT void* create(const char* simulator_name,
@@ -83,8 +83,6 @@ void fillGrid(int mpi_rank, int numProcS, int multiXproc,int multiYproc, int mul
         vtkMultiPieceDataSet* multiPiece = vtkMultiPieceDataSet::SafeDownCast(VTKGrid->GetBlock(0));
         vtkDataSet* dataSet = vtkDataSet::SafeDownCast(multiPiece->GetPiece(mpi_statRank));
 
-        std::cout<< " ------------------- "<< mpi_statRank <<" "<< getSpatialRank(mpi_rank, numProcS)<<std::endl;
-
         int x_dom = mpi_statRank%multiXproc;
         int y_dom = (mpi_statRank/multiXproc)%multiYproc;
         int z_dom = mpi_statRank/multiYproc/multiXproc;
@@ -98,7 +96,7 @@ void fillGrid(int mpi_rank, int numProcS, int multiXproc,int multiYproc, int mul
                 field_array_mean->SetName( (std::string(variable_name)+"_mean").c_str());
                 dataSet->GetPointData()->AddArray(field_array_mean);
                 field_array_mean->Delete();
-                PRINTL
+
         }
 
         if (!dataSet->GetPointData()->GetArray((std::string(variable_name)+"_var").c_str()))
@@ -110,7 +108,8 @@ void fillGrid(int mpi_rank, int numProcS, int multiXproc,int multiYproc, int mul
                 field_array_var->SetName( (std::string(variable_name)+"_var").c_str() );
                 dataSet->GetPointData()->AddArray(field_array_var);
                 field_array_var->Delete();
-                PRINTL
+
+
         }
 
         vtkDoubleArray* field_array_mean = vtkDoubleArray::SafeDownCast(dataSet->GetPointData()->GetArray((std::string(variable_name)+"_mean").c_str()));
@@ -140,7 +139,7 @@ void fillGrid(int mpi_rank, int numProcS, int multiXproc,int multiYproc, int mul
                 }
 
         }
-        std::cout<< " MAX global "<< globalIndex <<" with local "<<localIndex << "with ntuples: "<<ntuples <<std::endl;
+  //     std::cout<< " MAX global "<< globalIndex <<" with local "<<localIndex << "with ntuples: "<<ntuples <<std::endl;
 
 }
 
@@ -175,31 +174,31 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 int mpi_spatialSize; // is the same as number of samples
                 MPI_Comm_size(spatialComm, &mpi_spatialSize);
 
-//std::cout<< "  ===================================== "<< mpi_spatialRank<< " of "<<mpi_spatialSize<<std::endl;
 
-                std::cout<<" ns "<<nx<<" "<<ny<<" "<<nz<<std::endl;
                 //check if we can run all in parallel:
                 int nsamples = std::stoi(my_parameters->getParameter("samples"));
                 if(mpi_size < nsamples) {
                         std::cerr<< "warning: not enough mpi nodes,  reduce sample size to number of mpi nodes: "<< mpi_size<<std::endl;
                 }
 
-
-                //      std::cout<<"mpi rank : "<<mpi_rank<< " at variable "<< variable_name;
-                //        std::cout<<"spatial rank : "<<getSpatialRank(mpi_rank,numProcS);
-                //            std::cout<<"sample rank : "<<getStatisticalRank(mpi_rank,numProcS) <<std::endl;
-
-
                 int norm_samples = nsamples;
                 const size_t ndata = (ngx*2+nx)*(ny+2*ngy)*(nz+2*ngz);
                 double avrg_data[ndata];
                 double avrg_sqr_data[ndata];
 
-                MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, spatialComm); //getSpatialRank(mpi_rank, numProcS)
+                MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, spatialComm);
 
-                MPI_Op op;
-                MPI_Op_create( (MPI_User_function *)addsquared, 1, &op);
-                MPI_Reduce(variable_data, avrg_sqr_data, ndata, MPI_DOUBLE, op,0, spatialComm);
+            //    MPI_Op op;
+              //  MPI_Op_create( (MPI_User_function *)addsquared, 1, &op);
+
+                double sqr_variable_data[ndata];
+                //get squared sum to use for variance, reuse variable_data to save space
+                for (int i = 0; i< ndata; ++i) {
+                        sqr_variable_data[i] = variable_data[i]*variable_data[i];
+                }
+
+                MPI_Reduce(&sqr_variable_data, avrg_sqr_data, ndata, MPI_DOUBLE, MPI_SUM, 0, spatialComm);
+
 
                 if( mpi_spatialRank == 0 )
                 {
@@ -223,9 +222,6 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                 extend[4] = z_dom*nz;
                                 extend[5] = ( z_dom+1)*nz-1;
 
-                                std::cout<< "=============================  doms: "<<x_dom<<" "<<y_dom<<" " <<z_dom <<"extend : "<< extend[0]<< " "<<extend[1]<< " "<<extend[2]<< " "<<extend[3]<< " "<<extend[4]<< " "<<extend[5]<<std::endl;
-
-
                                 vtkImageData* VTKImage = vtkImageData::New();
                                 VTKImage->SetOrigin(0, 0, 0);
                                 VTKImage->SetExtent(extend);
@@ -241,8 +237,6 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                         }
 
                         fillGrid(mpi_rank, numProcS, multiXproc,multiYproc, multiZproc, variable_name,  nx,  ny,  nz, ngx,  ngy,  ngz, avrg_data, avrg_sqr_data, norm_samples);
-
-                //        dataDescription->GetInputDescriptionByName("input")->SetGrid(VTKGrid);
 
                 }
 
@@ -408,7 +402,7 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
                 }
                 dataDescription->Delete();
         }
-        //std::cout<<"mpi rank : "<<mpi_rank<< " at 2 end time "<< time<<std::endl;
+
 }
 
 
@@ -427,18 +421,17 @@ DLL_ADAPTOR_EXPORT void delete_data(void* data) {
         }
 
 
-        if (Comm)
+        if (false)
         {
                 delete Comm;
                 Comm = NULL;
         }
-        if(coproc_comm)
+        if(false)
         {
-
                 MPI_Comm_free(&coproc_comm);
 
         }
-        if(spatialComm)
+        if(false) //spatialComm)
         {
                 MPI_Comm_free(&spatialComm);
         }

@@ -5,6 +5,19 @@ from paraview import coprocessing
 # the frequency to output everything
 outputfrequency = 1
 
+# trace generated using paraview version 5.6.1
+#
+# To ensure correct image size when batch processing, please search
+# for and uncomment the line `# renderView*.ViewSize = [*,*]`
+
+#### import the simple module from the paraview
+
+#### uncomment the following to render all views
+# RenderAllViews()
+# alternatively, if you want to write images, you can use SaveScreenshot(...).
+
+
+
 #--------------------------------------------------------------
 # Code generated from cpstate.py to create the CoProcessor.
 
@@ -14,7 +27,7 @@ outputfrequency = 1
 def CreateCoProcessor():
   def _CreatePipeline(coprocessor, datadescription):
     class Pipeline:
-      adaptorinput = coprocessor.CreateProducer( datadescription, "input" )
+      adaptorinput = coprocessor.CreateProducer( datadescription, "input")
       grid = adaptorinput.GetClientSideObject().GetOutputDataObject(0)
 
       filename = None
@@ -48,12 +61,46 @@ def CreateCoProcessor():
       if filename:
         coprocessor.RegisterWriter(writer, filename, freq=outputfrequency)
 
+
+      print(" ==========================================================", datadescription.GetUserData().GetNumberOfArrays())
+      print(" ==========================================================", datadescription.GetUserData().GetArrayName(1))
+
+      histogram1 = Histogram(Input=datadescription
+      histogram1.SelectInputArray = ['FIELD', 'hist_E30']
+      histogram1.CustomBinRanges = [0, 6.785086070491616]
+
+    # get active view
+      barChartView1 = GetActiveViewOrCreate('XYBarChartView')
+    # uncomment following to set a specific view size
+    # barChartView1.ViewSize = [415, 779]
+
+    # show data in view
+      histogram1Display = Show(histogram1, barChartView1)
+
+    # trace defaults for the display properties.
+      histogram1Display.CompositeDataSetIndex = [0]
+      histogram1Display.AttributeType = 'Row Data'
+      histogram1Display.UseIndexForXAxis = 0
+      histogram1Display.XArrayName = 'bin_extents'
+      histogram1Display.SeriesVisibility = ['bin_values']
+      histogram1Display.SeriesLabel = ['bin_extents', 'bin_extents', 'bin_values', 'bin_values']
+      histogram1Display.SeriesColor = ['bin_extents', '0', '0', '0', 'bin_values', '0.89', '0.1', '0.11']
+      histogram1Display.SeriesPlotCorner = ['bin_extents', '0', 'bin_values', '0']
+      histogram1Display.SeriesLabelPrefix = ''
+      barChartView1.Update()
+      SetActiveView(barChartView1)
+      inputDisplay = Show(input, barChartView1)
+
+
+
+
+
+
     return Pipeline()
 
   class CoProcessor(coprocessing.CoProcessor):
     def CreatePipeline(self, datadescription):
       self.Pipeline = _CreatePipeline(self, datadescription)
-      print(" ==========================================================", datadescription.GetUserData().GetNumberOfArrays())
 
 
   coprocessor = CoProcessor()
@@ -104,6 +151,7 @@ def DoCoProcessing(datadescription):
 
     # Write image capture (Last arg: rescale lookup table), if appropriate.
     coprocessor.WriteImages(datadescription, rescale_lookuptable=False)
+
 
     # Live Visualization, if enabled.
     coprocessor.DoLiveVisualization(datadescription, "localhost", 22222)

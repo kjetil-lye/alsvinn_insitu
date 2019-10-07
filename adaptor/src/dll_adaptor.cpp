@@ -16,6 +16,8 @@
 #include <vtkDoubleArray.h>
 #include <vtkIntArray.h>
 #include <vtkImageData.h>
+#include<vtkBlankStructuredGrid.h>
+#include <vtkFieldData.h>
 #include <vtkNew.h>
 #include <vtkPointData.h>
 #include <vtkPoints.h>
@@ -23,7 +25,7 @@
 #include <iterator>
 
 #define ADAPTOR_USE_MPI_ON  1
-#define ADAPTOR_HISTORGAM 0
+#define ADAPTOR_HISTORGAM 1
 #define ADAPTOR_USE_VTKCPPROCESSOR 0
 
 #define PRINTL { int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank); std::cout << "In rank " << rank << ", at line: " <<__LINE__ << std::endl; }
@@ -36,12 +38,17 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
                                           int ngx, int ngy, int ngz, double ax, double ay, double az, double bx,
                                           double by, double bz, int gpu_number );
 
-void make_histogram(const char* variable_name, const int pntidx,  double* values, const int values_size,
+void make_histogramVTK(const char* variable_name, const int pntidx,  double* values, const int values_size,
                       const double min, const double max, const int nbins,
                       vtkFloatArray* bins, vtkIntArray* hist);
 
+void write_histogramVTK(const char* variable_name, const int pntidx,  double* values, const int values_size,
+                      const double min, const double max, const int nbins);
+
+
 vtkCPProcessor* Processor = NULL;
 vtkImageData* VTKGrid = NULL;
+vtkBlankStructuredGrid* histGrid = NULL;
 MPI_Comm coproc_comm;
 vtkMPICommunicatorOpaqueComm* Comm = NULL;
 vtkCPDataDescription*  dataDescription = NULL ; //vtkCPDataDescription::New();
@@ -354,7 +361,52 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
 
 
 
-void make_histogram( const char* variable_name, const int pntidx,  double* values, const int values_size, const double min, const double max, const int nbins,  vtkFloatArray* bins, vtkIntArray* hist )
+void make_pdf( const char* variable_name, const int pntidx,  double* values, const int values_size, const double min, const double max, const int nbins,  vtkFloatArray* bins, vtkIntArray* hist )
+{
+
+}
+
+
+
+void write_histogram( const char* variable_name, const int pntidx,  double* values, const int values_size, const double min, const double max, const int nbins)
+{
+    //    float bins[nbins];
+        int hist[nbins] = {0};
+
+        const double delta = (max-min)/double(nbins-1);
+        std::string name = "./historgrams/hist_"+std::string(variable_name)+ std::to_string(pntidx);
+        ofstream fs;
+        fs.open(outputFile,name);
+
+   // write the file headers
+
+        outputFile<<" bins = [ "
+        for(int i =0; i< nbins; i++)
+        {
+              //  bins[i] = i*delta;
+              //  hist[i]=0;
+                outputFile << i*delta <<",";
+        }
+
+          outputFile<<" ]"<<std::endl;
+          outputFile<<" values = [ "
+        for(int i =0; i< values_size; i++)
+        {
+                int idx = std::floor((*(values+i)-min) /delta);
+                hist[idx] += 1;
+        }
+
+        for(int i =0; i< nbins; i++)
+        {
+                outputFile<< " " << hist[i];
+        }
+        outputFile<<" ]"<<std::endl;
+
+
+}//end_make_histogram
+
+
+void make_histogramVTK( const char* variable_name, const int pntidx,  double* values, const int values_size, const double min, const double max, const int nbins,  vtkFloatArray* bins, vtkIntArray* hist )
 {
         const double delta = (max-min)/double(nbins-1);
         bins->SetNumberOfComponents(1);
@@ -378,18 +430,6 @@ void make_histogram( const char* variable_name, const int pntidx,  double* value
               //  std::cout<< " value : "<< tmp<< " idx "<< idx<<std::endl;
               //    std::cout<< " value : "<< *(values+i)<< " detal "<<delta<< " min: "<<min <<" max: "<<max << " divided : "<< (*(values+i)-min)/delta<< " idx "<< idx;
         }
-
-        for(int i =0; i< nbins; i++)
-        {
-                std::cout<< bins->GetValue(i) << " ";
-        }
-        std::cout<<std::endl;
-
-        for(int i =0; i< nbins; i++)
-        {
-                std::cout<< " " << hist->GetValue(i);
-        }
-        std::cout<<std::endl;
 
 }//end_make_histogram
 
@@ -463,20 +503,39 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
 
                                   //historgram calculcation for specifc points only;
                                   const int nbins = 5;
-                                  vtkFloatArray* bins = vtkFloatArray::New();
-                                  vtkIntArray* hist = vtkIntArray::New();
 
 
-                                  for ( int i =0; i<nii; i++) {
+                                //  histGrid = vtkBlankStructuredGrid::New();
+                            //      vtkFieldData* histfield =vtkFieldData::New();
+
+                                  for ( int i =0; i<nii; i++)
+                                   {
+
+                                  //  vtkFloatArray* bins = vtkFloatArray::New();
+                                  //  vtkIntArray* hist = vtkIntArray::New();
+
                                           //std::pair<int*, int*>
                                           auto minmax = std::minmax_element(pnt_values+(i*nsamples),pnt_values+(i+1)*nsamples );
-                                          make_histogram( variable_name, idxOfInterest[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second), nbins,  bins,  hist );
+                                      //    make_histogram( variable_name, idxOfInterest[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second), nbins,  bins,  hist );
 
-                                          //      dataDescription->SetUserData();
+                                          write_histogram(  variable_name, idxOfInterest[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second),  nbins);
+
                                           //TODO send historgram to paraview forr all points, e.g. put into blanked out grid
+                                      //    histfield->AddArray(bins);
+                                      //    histfield->AddArray(hist);
+
+                                        //print histogramms to file:
+
+
+
+
+                                      //    hist->Delete();
+                                          //bins->Delete();
+
+
                                   }
-                                  hist->Delete();
-                                  bins->Delete();
+
+                          //        dataDescription->SetUserData(histfield);
 
                                   int extend[6]  = {0,nx-1,0,ny-1,0,nz-1};//{ngx, nx+ngx, ngy, ny+ngy, ngz, 0}; //nz+ngz };
 

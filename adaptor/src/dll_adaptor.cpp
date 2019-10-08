@@ -39,7 +39,7 @@ extern "C" {
                                             double by, double bz, int gpu_number );
 
 
-void write_histogram(const char* variable_name, const int pntidx,  double* values, const int values_size,
+void write_histogram(const char* variable_name,std::string pntidx,  double* values, const int values_size,
                         const double min, const double max,  const int nbins, const std::string path);
 
 
@@ -462,9 +462,9 @@ void getPoints(double* p_x, double* p_y, double* p_z, int n)
 {
 //read from file or something.
       p_x[0] = 0.5;
-      p_x[1] = 0.7;
+      p_x[1] = 0.75;
       p_y[0] = 0.5;
-      p_y[1] = 0.7;
+      p_y[1] = 0.75;
       p_z[0] = 0.5;
       p_z[1] = 0.5;
 }
@@ -475,27 +475,32 @@ void getRankIndex(int nx, int ny, int nz,   int multiXproc, int multiYproc, int 
   int idx = nx*multiXproc*x;
   int idy = ny*multiYproc*y;
   int idz = nz*multiZproc*z;
-//  std::cout<< "nx "<< nx<<"x "<<x <<"idx"<<idx<<std::endl;
+//  std::cout<< "nx "<< nx<<" x "<<x <<" idx "<<idx<<std::endl;
+//  std::cout<< "ny "<< ny<<" y "<<y <<" idx "<<idy<<std::endl;
+//  std::cout<< "nz "<< nz<<" z "<<z <<" idx "<<idz<<std::endl;
+  int domx = std::floor(idx/nx);
+  int domy = std::floor(idy/ny);
+  int domz = std::floor(idz/nz);
 
-  int domx = std::floor(idx/multiXproc);
-  int domy = std::floor(idy/multiYproc);
-  int domz = std::floor(idz/multiZproc);
+  spatialrank = domx +domy*(multiXproc-1)+domz*(multiXproc-1)*(multiXproc-1);
+  localindex = (idx%nx) + (idy%ny)*nx + (idz%nz)*nx*ny;
 
-  spatialrank = domx +domy*multiXproc+domz*multiXproc*multiZproc;
-  localindex = (idx-domx*nx) + (idy-domy*ny)*nx + (idz-domz*nz)*nx*ny;
+  //std::cout<<" local points index "<< localindex<<std::endl;
+  //  std::cout<<" local points rank "<< spatialrank<<std::endl;
+
 
 }
 
 
 
-void write_histogram( const char* variable_name, const int pntidx,  double* values, const int values_size, const double min, const double max, const int nbins, const std::string path)
+void write_histogram( const char* variable_name, const std::string pntidx,  double* values, const int values_size, const double min, const double max, const int nbins, const std::string path)
 {
     //    float bins[nbins];
         int hist[nbins] = {0};
 
         const double delta = (max-min)/double(nbins-1);
 
-        std::string fname = path+"hist_"+std::string(variable_name)+ std::to_string(pntidx)+".csv";
+        std::string fname = path+"hist_"+std::string(variable_name)+ pntidx+".csv";
         std::fstream outfile;
         outfile.open(fname,   std::fstream::out  );
 
@@ -582,7 +587,7 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
 
                  const int nii = 2;
                   double *pnt_values;
-                  const int pnt_values_size = nii*nsamples;
+                  const int pnt_values_size = nsamples;
                   int locPntIndex[nii];
                   double px[nii];
                   double py[nii];
@@ -590,60 +595,56 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                   getPoints(px,py,pz, nii);
 
 
-                  if(mpi_rank ==0)
+                  if(mpi_spatialRank ==0)
                   {
                           pnt_values = (double*)malloc(sizeof(double) * (pnt_values_size));
                   }
 
                   //collect data points from all frames to store all frame values for specifc points
+                  const std::string path = my_parameters->getParameter("histfolder");
+                  //historgram calculcation for specifc points only;
+                  const int nbins = std::stoi(my_parameters->getParameter("histnbins"));
+
+
+                    MPI_Barrier(spatialComm);
+
 
                   for ( int i =0; i<nii; i++)
                   {
-                        int pointSR = 0;
-                         getRankIndex(nx, ny, nz,  multiXproc, multiYproc, multiZproc, px[i], py[i], pz[i], pointSR, locPntIndex[i]);
+                          int pointSR = 0;
+                            int locPntIndex = 0;
+                          getRankIndex(nx, ny, nz,  multiXproc, multiYproc, multiZproc, px[i], py[i], pz[i], pointSR,  locPntIndex);
+                          std::cout<<" local points index "<< locPntIndex<<std::endl;
+                                std::cout<<" local points rank "<< pointSR<<std::endl;
+                          if(pointSR ==  getSpatialRank(mpi_rank, numProcS) )
+                          {
+                                  MPI_Gather(variable_data+ locPntIndex, 1,  MPI_DOUBLE,  pnt_values, 1, MPI_DOUBLE, 0,  spatialComm);
 
-                          if( pointSR ==  getSpatialRank(0, numProcS) )
-                           {
-                              MPI_Gather(variable_data+locPntIndex[i], 1,  MPI_DOUBLE,  pnt_values+(i*(nsamples-1)), 1, MPI_DOUBLE, 0,  my_parameters->getMPIComm());
-                              pnt_values[i*nsamples]= variable_data[locPntIndex[i]];
+                                  if(mpi_spatialRank ==0)
+                                  {
+                                    std::string pntname = std::to_string( px[i])+"x"+ std::to_string( py[i])+"y"+ std::to_string( pz[i])+"z";
+                                    auto minmax = std::minmax_element(pnt_values , pnt_values+nsamples );
+
+                                    std::cout<< "11111111111111111111111111111111111111111111111 min "<< *(minmax.second)<<std::endl;
+                                    std::cout<< "11111111111111111111111111111111111111111111111 min "<< *(minmax.first)<<std::endl;
+                                    write_histogram(  variable_name,  pntname,  pnt_values+nsamples, nsamples, *(minmax.first),  *(minmax.second),  nbins, path);
+                                  }
+
+
                           }
-                          else if(pointSR ==  getSpatialRank(mpi_rank, numProcS) || mpi_rank ==0 )
-                              {
-                                MPI_Gather(variable_data+locPntIndex[i], 1,  MPI_DOUBLE,  pnt_values+(i*nsamples), 1, MPI_DOUBLE, 0,  my_parameters->getMPIComm());
-                              }
 
                   }
 
 
 
-                    if(mpi_rank ==0)
-                    {
-                                  const std::string path = my_parameters->getParameter("histfolder");
-                                  //historgram calculcation for specifc points only;
-                                  const int nbins = std::stoi(my_parameters->getParameter("histnbins"));
-                                  //  histGrid = vtkBlankStructuredGrid::New();
-                                  //      vtkFieldData* histfield =vtkFieldData::New();
-
-                                for ( int i =0; i<nii; i++)
-                                   {
-                                     PRINTL
-                                          auto minmax = std::minmax_element(pnt_values+(i*nsamples),pnt_values+(i+1)*nsamples );
-                                          write_histogram(  variable_name, locPntIndex[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second),  nbins, path);
-                                  }
-                                  PRINTL
-
-                                 free(pnt_values);
-                               }
-
-
-
                                if(mpi_spatialRank == 0)
                                {
+                                 free(pnt_values);
 
                                   int mpi_statRank; // is the same as the spatialRank
                                   MPI_Comm_rank(coproc_comm, &mpi_statRank);
 
-PRINTL
+
                                   if (VTKGrid == NULL)
                                   {
 

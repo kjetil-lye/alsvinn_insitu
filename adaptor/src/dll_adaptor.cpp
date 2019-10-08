@@ -375,9 +375,9 @@ void write_histogram( const char* variable_name, const int pntidx,  double* valu
 
         const double delta = (max-min)/double(nbins-1);
 
-        std::string name = path+"hist_"+std::string(variable_name)+ std::to_string(pntidx)+".csv";
+        std::string fname = path+"hist_"+std::string(variable_name)+ std::to_string(pntidx)+".csv";
         std::fstream outfile;
-        outfile.open(name,   std::fstream::out  );
+        outfile.open(fname,   std::fstream::out  );
 
    // write the file headers
 

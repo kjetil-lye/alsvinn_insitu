@@ -20,7 +20,7 @@ make_cinema_table=False
 
 #--------------------------------------------------------------
 # Code generated from cpstate.py to create the CoProcessor.
-# paraview version 5.6.0
+# paraview version 5.6.1
 #--------------------------------------------------------------
 
 from paraview.simple import *
@@ -31,13 +31,13 @@ from paraview import coprocessing
 def CreateCoProcessor():
   def _CreatePipeline(coprocessor, datadescription):
     class Pipeline:
-      # state file generated using paraview version 5.6.0
+      # state file generated using paraview version 5.6.1
 
       # ----------------------------------------------------------------
       # setup views used in the visualization
       # ----------------------------------------------------------------
 
-      # trace generated using paraview version 5.6.0
+      # trace generated using paraview version 5.6.1
       #
       # To ensure correct image size when batch processing, please search 
       # for and uncomment the line `# renderView*.ViewSize = [*,*]`
@@ -47,39 +47,29 @@ def CreateCoProcessor():
 
       # Create a new 'Render View'
       renderView1 = CreateView('RenderView')
-      renderView1.ViewSize = [1470, 619]
-      renderView1.AnnotationColor = [0.0, 0.0, 0.0]
+      renderView1.ViewSize = [839, 779]
       renderView1.AxesGrid = 'GridAxes3DActor'
-      renderView1.OrientationAxesVisibility = 0
-      renderView1.OrientationAxesLabelColor = [0.0, 0.0, 0.0]
-      renderView1.OrientationAxesOutlineColor = [0.0, 0.0, 0.0]
-      renderView1.CenterOfRotation = [63.5, 63.5, 0.0]
+      renderView1.CenterOfRotation = [63.5, 63.5, 63.5]
       renderView1.StereoType = 0
-      renderView1.CameraPosition = [63.5, 63.5, 346.97045256124744]
-      renderView1.CameraFocalPoint = [63.5, 63.5, 0.0]
-      renderView1.CameraParallelScale = 89.80256121069154
-      renderView1.Background = [1.0, 1.0, 1.0]
+      renderView1.CameraPosition = [411.9632116736529, 172.00959094201428, -154.17361165173892]
+      renderView1.CameraFocalPoint = [63.50000000000001, 63.500000000000036, 63.49999999999999]
+      renderView1.CameraViewUp = [-0.1650676853795375, 0.9624452237208417, 0.2155269138190891]
+      renderView1.CameraParallelScale = 109.9852262806237
+      renderView1.Background = [0.32, 0.34, 0.43]
 
       # init the 'GridAxes3DActor' selected for 'AxesGrid'
-      renderView1.AxesGrid.XTitleColor = [0.0, 0.0, 0.0]
       renderView1.AxesGrid.XTitleFontFile = ''
-      renderView1.AxesGrid.YTitleColor = [0.0, 0.0, 0.0]
       renderView1.AxesGrid.YTitleFontFile = ''
-      renderView1.AxesGrid.ZTitleColor = [0.0, 0.0, 0.0]
       renderView1.AxesGrid.ZTitleFontFile = ''
-      renderView1.AxesGrid.GridColor = [0.0, 0.0, 0.0]
-      renderView1.AxesGrid.XLabelColor = [0.0, 0.0, 0.0]
       renderView1.AxesGrid.XLabelFontFile = ''
-      renderView1.AxesGrid.YLabelColor = [0.0, 0.0, 0.0]
       renderView1.AxesGrid.YLabelFontFile = ''
-      renderView1.AxesGrid.ZLabelColor = [0.0, 0.0, 0.0]
       renderView1.AxesGrid.ZLabelFontFile = ''
 
       # register the view with coprocessor
       # and provide it with information such as the filename to use,
       # how frequently to write the images, etc.
       coprocessor.RegisterView(renderView1,
-          filename='RenderView1_%t.png', freq=1, fittoscreen=1, magnification=1, width=824, height=619, cinema={})
+          filename='RenderView1_%t.png', freq=1, fittoscreen=1, magnification=1, width=1080, height=720, cinema={})
       renderView1.ViewTime = datadescription.GetTime()
 
       # ----------------------------------------------------------------
@@ -91,114 +81,101 @@ def CreateCoProcessor():
       # setup the data processing pipelines
       # ----------------------------------------------------------------
 
-      # create a new 'XML Partitioned Image Data Reader'
+      # create a new 'XML MultiBlock Data Reader'
       # create a producer from a simulation input
       input = coprocessor.CreateProducer(datadescription, 'input')
+
+      # create a new 'Contour'
+      contour1 = Contour(Input=input)
+      contour1.ContourBy = ['POINTS', 'rho_mean']
+      contour1.OutputPointsPrecision = 'Single'
+      contour1.Isosurfaces = [0.9366703844300179, 1.2648064033510669, 1.5929424222721158, 1.9210784411931647, 2.2492144601142137]
+      contour1.PointMergeMethod = 'Octree Binning'
 
       # ----------------------------------------------------------------
       # setup the visualization in view 'renderView1'
       # ----------------------------------------------------------------
 
-      # show data from input
-      inputDisplay = Show(input, renderView1)
+      # show data from contour1
+      contour1Display = Show(contour1, renderView1)
 
-      # get color transfer function/color map for 'rho'
-      rhoLUT = GetColorTransferFunction('rho')
-      rhoLUT.RGBPoints = [0.9263762791410743, 0.231373, 0.298039, 0.752941, 1.5517046953894251, 0.865003, 0.865003, 0.865003, 2.177033111637776, 0.705882, 0.0156863, 0.14902]
-      rhoLUT.ScalarRangeInitialized = 1.0
-
-      # get opacity transfer function/opacity map for 'rho'
-      rhoPWF = GetOpacityTransferFunction('rho')
-      rhoPWF.Points = [0.9263762791410743, 0.0, 0.5, 0.0, 2.177033111637776, 1.0, 0.5, 0.0]
-      rhoPWF.ScalarRangeInitialized = 1
+      # get color transfer function/color map for 'rho_var'
+      rho_varLUT = GetColorTransferFunction('rho_var')
+      rho_varLUT.RGBPoints = [0.0, 0.231373, 0.298039, 0.752941, 2.5, 0.865003, 0.865003, 0.865003, 5.0, 0.705882, 0.0156863, 0.14902]
+      rho_varLUT.ScalarRangeInitialized = 1.0
 
       # trace defaults for the display properties.
-      inputDisplay.Representation = 'Surface'
-      inputDisplay.AmbientColor = [0.0, 0.0, 0.0]
-      inputDisplay.ColorArrayName = ['POINTS', 'rho']
-      inputDisplay.LookupTable = rhoLUT
-      inputDisplay.OSPRayScaleArray = 'E'
-      inputDisplay.OSPRayScaleFunction = 'PiecewiseFunction'
-      inputDisplay.SelectOrientationVectors = 'E'
-      inputDisplay.ScaleFactor = 12.700000000000001
-      inputDisplay.SelectScaleArray = 'E'
-      inputDisplay.GlyphType = 'Arrow'
-      inputDisplay.GlyphTableIndexArray = 'E'
-      inputDisplay.GaussianRadius = 0.635
-      inputDisplay.SetScaleArray = ['POINTS', 'E']
-      inputDisplay.ScaleTransferFunction = 'PiecewiseFunction'
-      inputDisplay.OpacityArray = ['POINTS', 'E']
-      inputDisplay.OpacityTransferFunction = 'PiecewiseFunction'
-      inputDisplay.DataAxesGrid = 'GridAxesRepresentation'
-      inputDisplay.SelectionCellLabelFontFile = ''
-      inputDisplay.SelectionPointLabelFontFile = ''
-      inputDisplay.PolarAxes = 'PolarAxesRepresentation'
-      inputDisplay.ScalarOpacityUnitDistance = 7.108580809929175
-      inputDisplay.ScalarOpacityFunction = rhoPWF
+      contour1Display.Representation = 'Surface'
+      contour1Display.ColorArrayName = ['POINTS', 'rho_var']
+      contour1Display.LookupTable = rho_varLUT
+      contour1Display.OSPRayScaleArray = 'E_var'
+      contour1Display.OSPRayScaleFunction = 'PiecewiseFunction'
+      contour1Display.SelectOrientationVectors = 'None'
+      contour1Display.ScaleFactor = 12.700000000000001
+      contour1Display.SelectScaleArray = 'None'
+      contour1Display.GlyphType = 'Arrow'
+      contour1Display.GlyphTableIndexArray = 'None'
+      contour1Display.GaussianRadius = 0.635
+      contour1Display.SetScaleArray = ['POINTS', 'E_var']
+      contour1Display.ScaleTransferFunction = 'PiecewiseFunction'
+      contour1Display.OpacityArray = ['POINTS', 'E_var']
+      contour1Display.OpacityTransferFunction = 'PiecewiseFunction'
+      contour1Display.DataAxesGrid = 'GridAxesRepresentation'
+      contour1Display.SelectionCellLabelFontFile = ''
+      contour1Display.SelectionPointLabelFontFile = ''
+      contour1Display.PolarAxes = 'PolarAxesRepresentation'
+
+      # init the 'PiecewiseFunction' selected for 'OSPRayScaleFunction'
+      contour1Display.OSPRayScaleFunction.Points = [1.9984014443252818e-13, 0.0, 0.5, 0.0, 0.2761551785771892, 1.0, 0.5, 0.0]
+
+      # init the 'PiecewiseFunction' selected for 'ScaleTransferFunction'
+      contour1Display.ScaleTransferFunction.Points = [1.9984014443252818e-13, 0.0, 0.5, 0.0, 0.2761551785771892, 1.0, 0.5, 0.0]
+
+      # init the 'PiecewiseFunction' selected for 'OpacityTransferFunction'
+      contour1Display.OpacityTransferFunction.Points = [1.9984014443252818e-13, 0.0, 0.5, 0.0, 0.2761551785771892, 1.0, 0.5, 0.0]
 
       # init the 'GridAxesRepresentation' selected for 'DataAxesGrid'
-      inputDisplay.DataAxesGrid.XTitleColor = [0.0, 0.0, 0.0]
-      inputDisplay.DataAxesGrid.XTitleFontFile = ''
-      inputDisplay.DataAxesGrid.YTitleColor = [0.0, 0.0, 0.0]
-      inputDisplay.DataAxesGrid.YTitleFontFile = ''
-      inputDisplay.DataAxesGrid.ZTitleColor = [0.0, 0.0, 0.0]
-      inputDisplay.DataAxesGrid.ZTitleFontFile = ''
-      inputDisplay.DataAxesGrid.GridColor = [0.0, 0.0, 0.0]
-      inputDisplay.DataAxesGrid.XLabelColor = [0.0, 0.0, 0.0]
-      inputDisplay.DataAxesGrid.XLabelFontFile = ''
-      inputDisplay.DataAxesGrid.YLabelColor = [0.0, 0.0, 0.0]
-      inputDisplay.DataAxesGrid.YLabelFontFile = ''
-      inputDisplay.DataAxesGrid.ZLabelColor = [0.0, 0.0, 0.0]
-      inputDisplay.DataAxesGrid.ZLabelFontFile = ''
+      contour1Display.DataAxesGrid.XTitleFontFile = ''
+      contour1Display.DataAxesGrid.YTitleFontFile = ''
+      contour1Display.DataAxesGrid.ZTitleFontFile = ''
+      contour1Display.DataAxesGrid.XLabelFontFile = ''
+      contour1Display.DataAxesGrid.YLabelFontFile = ''
+      contour1Display.DataAxesGrid.ZLabelFontFile = ''
 
       # init the 'PolarAxesRepresentation' selected for 'PolarAxes'
-      inputDisplay.PolarAxes.PolarAxisTitleColor = [0.0, 0.0, 0.0]
-      inputDisplay.PolarAxes.PolarAxisTitleFontFile = ''
-      inputDisplay.PolarAxes.PolarAxisLabelColor = [0.0, 0.0, 0.0]
-      inputDisplay.PolarAxes.PolarAxisLabelFontFile = ''
-      inputDisplay.PolarAxes.LastRadialAxisTextColor = [0.0, 0.0, 0.0]
-      inputDisplay.PolarAxes.LastRadialAxisTextFontFile = ''
-      inputDisplay.PolarAxes.SecondaryRadialAxesTextColor = [0.0, 0.0, 0.0]
-      inputDisplay.PolarAxes.SecondaryRadialAxesTextFontFile = ''
+      contour1Display.PolarAxes.PolarAxisTitleFontFile = ''
+      contour1Display.PolarAxes.PolarAxisLabelFontFile = ''
+      contour1Display.PolarAxes.LastRadialAxisTextFontFile = ''
+      contour1Display.PolarAxes.SecondaryRadialAxesTextFontFile = ''
 
       # setup the color legend parameters for each legend in this view
 
-      # get color legend/bar for rhoLUT in view renderView1
-      rhoLUTColorBar = GetScalarBar(rhoLUT, renderView1)
-      rhoLUTColorBar.WindowLocation = 'AnyLocation'
-      rhoLUTColorBar.Position = [0.6700680272108844, 0.16478190630048462]
-      rhoLUTColorBar.Title = 'rho'
-      rhoLUTColorBar.ComponentTitle = ''
-      rhoLUTColorBar.TitleColor = [0.0, 0.0, 0.0]
-      rhoLUTColorBar.TitleFontFile = ''
-      rhoLUTColorBar.LabelColor = [0.0, 0.0, 0.0]
-      rhoLUTColorBar.LabelFontFile = ''
-      rhoLUTColorBar.ScalarBarLength = 0.3300000000000001
+      # get color legend/bar for rho_varLUT in view renderView1
+      rho_varLUTColorBar = GetScalarBar(rho_varLUT, renderView1)
+      rho_varLUTColorBar.Title = 'rho_var'
+      rho_varLUTColorBar.ComponentTitle = ''
+      rho_varLUTColorBar.TitleFontFile = ''
+      rho_varLUTColorBar.LabelFontFile = ''
 
       # set color bar visibility
-      rhoLUTColorBar.Visibility = 1
+      rho_varLUTColorBar.Visibility = 1
 
       # show color legend
-      inputDisplay.SetScalarBarVisibility(renderView1, True)
+      contour1Display.SetScalarBarVisibility(renderView1, True)
 
       # ----------------------------------------------------------------
       # setup color maps and opacity mapes used in the visualization
       # note: the Get..() functions create a new object, if needed
       # ----------------------------------------------------------------
 
-      # get color transfer function/color map for 'E'
-      eLUT = GetColorTransferFunction('E')
-      eLUT.RGBPoints = [5.131215626561977, 0.231373, 0.298039, 0.752941, 6.207362147565785, 0.865003, 0.865003, 0.865003, 7.283508668569594, 0.705882, 0.0156863, 0.14902]
-      eLUT.ScalarRangeInitialized = 1.0
-
-      # get opacity transfer function/opacity map for 'E'
-      ePWF = GetOpacityTransferFunction('E')
-      ePWF.Points = [5.131215626561977, 0.0, 0.5, 0.0, 7.283508668569594, 1.0, 0.5, 0.0]
-      ePWF.ScalarRangeInitialized = 1
+      # get opacity transfer function/opacity map for 'rho_var'
+      rho_varPWF = GetOpacityTransferFunction('rho_var')
+      rho_varPWF.Points = [0.0, 0.0, 0.5, 0.0, 5.0, 1.0, 0.5, 0.0]
+      rho_varPWF.ScalarRangeInitialized = 1
 
       # ----------------------------------------------------------------
       # finally, restore active source
-      SetActiveSource(input)
+      SetActiveSource(contour1)
       # ----------------------------------------------------------------
     return Pipeline()
 
@@ -211,7 +188,7 @@ def CreateCoProcessor():
   freqs = {'input': [1, 1]}
   coprocessor.SetUpdateFrequencies(freqs)
   if requestSpecificArrays:
-    arrays = [['E', 0], ['mx', 0], ['my', 0], ['rho', 0]]
+    arrays = [['E_mean', 0], ['E_var', 0], ['mx_mean', 0], ['mx_var', 0], ['my_mean', 0], ['my_var', 0], ['mz_mean', 0], ['mz_var', 0], ['rho_mean', 0], ['rho_var', 0]]
     coprocessor.SetRequestedArrays('input', arrays)
   coprocessor.SetInitialOutputOptions(timeStepToStartOutputAt,forceOutputAtFirstCall)
 
@@ -233,7 +210,7 @@ coprocessor = CreateCoProcessor()
 
 #--------------------------------------------------------------
 # Enable Live-Visualizaton with ParaView and the update frequency
-coprocessor.EnableLiveVisualization(True, 1)
+coprocessor.EnableLiveVisualization(False, 1)
 
 # ---------------------- Data Selection method ----------------------
 

@@ -499,7 +499,7 @@ void write_histogram( const char* variable_name, const std::string pntidx,  doub
 
         //    float bins[nbins];
         int hist[nbins] = {0};
-        const double delta = (max-min)/double(nbins-1);
+        const double delta = (max-min)/double(nbins);
 
         std::string fname = path+"hist_"+std::string(variable_name)+ pntidx+".csv";
         std::fstream outfile;
@@ -510,13 +510,13 @@ void write_histogram( const char* variable_name, const std::string pntidx,  doub
         {
                 //  bins[i] = i*delta;
                 //    hist[i]=0;
-                outfile <<","<< min+i*delta;
+                outfile <<","<< min+i*(max-min)/double(nbins);
         }
         outfile<<" ]"<<std::endl;
 
         for(int i =0; i< values_size; i++)
         {
-                int idx =  (delta<=0) ? 0 : std::floor((*(values+i)-min) /delta);
+                int idx =  (delta<=0) ? 0 : std::round(double(*(values+i)-min) /delta);
                 //        std::cout<< " his <<"<< idx << " nbins "<<delta<<" "<< values[i]<< " i" << i <<std::endl;
                 hist[idx] += 1;
         }
@@ -543,25 +543,25 @@ void write_2pt_histogram( const char* variable_name,  const int values_size, con
         outfile.open(fname,   std::fstream::out  );
 
         outfile<<" bins1 = ["<<min1;
-        for(int i =1; i< nbins; i++)
+        for(int i =1; i<=nbins; i++)
         {
-                outfile <<","<< min1+i*delta1;
+                outfile <<","<< min1+i*(max1-min1)/double(nbins);
         }
         outfile<<" ]"<<std::endl;
 
 
         outfile<<" bins2 = ["<<min2;
-        for(int i =1; i< nbins; i++)
+        for(int i =1; i<=nbins; i++)
         {
-                outfile <<","<< min2+i*delta2;
+                outfile <<","<< min2+i*(max2-min2)/double(nbins);
         }
         outfile<<" ]"<<std::endl;
 
 
         for(int i =0; i< values_size; i++)
         {
-                int id1 =  (delta1<=0) ? 0 : std::floor((*(values1+i)-min1) /delta1);
-                int id2 =  (delta2<=0) ? 0 : std::floor((*(values2+i)-min2) /delta2);
+                int id1 =  (delta1<=0) ? 0 :  (*(values1+i)-min1) /delta1;
+                int id2 =  (delta2<=0) ? 0 : (*(values2+i)-min2) /delta2;
                 int index = id1 + id2*nbins;
                 hist[index] += 1;
         }
@@ -669,10 +669,12 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                 int pointSR2 = 0;
                 int locPntIndex2 = 0;
                 getRankIndex(nx, ny, nz,  multiXproc, multiYproc, multiZproc, px[i], py[i], pz[i], pointSR,  locPntIndex);
+                      sqr_variable_data[locPntIndex]=mpi_rank;
 
                 if( twoPoint && i <nii-1)
                 {
                         getRankIndex(nx, ny, nz,  multiXproc, multiYproc, multiZproc, px[i+1], py[i+1], pz[i+1], pointSR2,  locPntIndex2);
+                        sqr_variable_data[locPntIndex2]=mpi_rank;
                 }
                 //      std::cout<<" local points index "<< locPntIndex <<" ndata "<< ndata<<std::endl;
                 //      std::cout<<" local points rank       "<< pointSR<<"  - "<< getSpatialRank(mpi_rank, numProcS)<<std::endl;
@@ -683,7 +685,7 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                 {
 
                         //       std::cout<<"rank       "<< mpi_rank<<"  - "<< getSpatialRank(mpi_rank, numProcS)<< "  - "<< mpi_spatialRank<<std::endl;
-                        MPI_Gather(variable_data+locPntIndex, 1,  MPI_DOUBLE,  pnt_values, 1, MPI_DOUBLE, 0,  spatialComm);
+                        MPI_Gather(sqr_variable_data+locPntIndex, 1,  MPI_DOUBLE,  pnt_values, 1, MPI_DOUBLE, 0,  spatialComm);
                         if(mpi_spatialRank ==0)
                         {
                                 //          std::cout<<"rank       "<< mpi_rank<< " gaather       "<< pnt_values[0] <<"  - "<<  pnt_values[1]  <<"  - "<<  pnt_values[2] <<"  - "<<  pnt_values[3]<<std::endl;
@@ -704,7 +706,7 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                 if(twoPoint && i <nii-1 && pointSR2 ==  getSpatialRank(mpi_rank, numProcS))
                 {
 
-                          MPI_Gather(variable_data+locPntIndex2, 1,  MPI_DOUBLE,  pnt_values2, 1, MPI_DOUBLE, 0,  spatialComm);
+                          MPI_Gather(sqr_variable_data+locPntIndex2, 1,  MPI_DOUBLE,  pnt_values2, 1, MPI_DOUBLE, 0,  spatialComm);
 
                           if(mpi_spatialRank ==0)
                           {

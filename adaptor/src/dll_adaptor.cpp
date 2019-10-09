@@ -495,9 +495,9 @@ void getRankIndex(int nx, int ny, int nz,   int multiXproc, int multiYproc, int 
 
 void write_histogram( const char* variable_name, const std::string pntidx,  double* values, const int values_size, const double min, const double max, const int nbins, const std::string path)
 {
+
     //    float bins[nbins];
         int hist[nbins] = {0};
-
         const double delta = (max-min)/double(nbins-1);
 
         std::string fname = path+"hist_"+std::string(variable_name)+ pntidx+".csv";
@@ -513,13 +513,13 @@ void write_histogram( const char* variable_name, const std::string pntidx,  doub
             //    hist[i]=0;
                 outfile <<","<< min+i*delta;
         }
-
           outfile<<" ]"<<std::endl;
 
         for(int i =0; i< values_size; i++)
         {
-                int idx = std::floor((*(values+i)-min) /delta);
-                hist[idx] += 1;
+                  int idx =  (delta<=0)? 0: std::floor((*(values+i)-min) /delta);
+          //        std::cout<< " his <<"<< idx << " nbins "<<delta<<" "<< values[i]<< " i" << i <<std::endl;
+                  hist[idx] += 1;
         }
 
         outfile<<" values = [ "<<hist[0];
@@ -605,29 +605,39 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                   //historgram calculcation for specifc points only;
                   const int nbins = std::stoi(my_parameters->getParameter("histnbins"));
 
+                //  std::cout<<"rank       "<< mpi_rank<<"  - "<< getSpatialRank(mpi_rank, numProcS)<< "  - "<< mpi_spatialRank<<std::endl;
 
-                    MPI_Barrier(spatialComm);
+                    //MPI_Barrier(spatialComm);
 
 
                   for ( int i =0; i<nii; i++)
                   {
                           int pointSR = 0;
-                            int locPntIndex = 0;
+                          int locPntIndex = 0;
                           getRankIndex(nx, ny, nz,  multiXproc, multiYproc, multiZproc, px[i], py[i], pz[i], pointSR,  locPntIndex);
-                          std::cout<<" local points index "<< locPntIndex<<std::endl;
-                                std::cout<<" local points rank "<< pointSR<<std::endl;
+                    //      std::cout<<" local points index "<< locPntIndex <<" ndata "<< ndata<<std::endl;
+                    //      std::cout<<" local points rank       "<< pointSR<<"  - "<< getSpatialRank(mpi_rank, numProcS)<<std::endl;
+
+
+
                           if(pointSR ==  getSpatialRank(mpi_rank, numProcS) )
                           {
-                                  MPI_Gather(variable_data+ locPntIndex, 1,  MPI_DOUBLE,  pnt_values, 1, MPI_DOUBLE, 0,  spatialComm);
+
+                        //       std::cout<<"rank       "<< mpi_rank<<"  - "<< getSpatialRank(mpi_rank, numProcS)<< "  - "<< mpi_spatialRank<<std::endl;
+                                  MPI_Gather(variable_data+locPntIndex, 1,  MPI_DOUBLE,  pnt_values, 1, MPI_DOUBLE, 0,  spatialComm);
+
 
                                   if(mpi_spatialRank ==0)
                                   {
-                                    std::string pntname = std::to_string( px[i])+"x"+ std::to_string( py[i])+"y"+ std::to_string( pz[i])+"z";
+                          //          std::cout<<"rank       "<< mpi_rank<< " gaather       "<< pnt_values[0] <<"  - "<<  pnt_values[1]  <<"  - "<<  pnt_values[2] <<"  - "<<  pnt_values[3]<<std::endl;
+                                    std::string pntname = std::to_string( px[i]).substr(0,4)+"x"+ std::to_string( py[i]).substr(0,4)+"y"+ std::to_string( pz[i]).substr(0,4)+"z_"+std::to_string(time).substr(0,4);
                                     auto minmax = std::minmax_element(pnt_values , pnt_values+nsamples );
 
-                                    std::cout<< "11111111111111111111111111111111111111111111111 min "<< *(minmax.second)<<std::endl;
-                                    std::cout<< "11111111111111111111111111111111111111111111111 min "<< *(minmax.first)<<std::endl;
-                                    write_histogram(  variable_name,  pntname,  pnt_values+nsamples, nsamples, *(minmax.first),  *(minmax.second),  nbins, path);
+                      //              std::cout<< "11111111111111111111111111111111111111111111111 min "<< *(minmax.second)<<std::endl;
+                          //          std::cout<< "11111111111111111111111111111111111111111111111 min "<< *(minmax.first)<<std::endl;
+
+                                    write_histogram(  variable_name,  pntname,  pnt_values, nsamples, *(minmax.first),  *(minmax.second),  nbins, path);
+
                                   }
 
 
@@ -639,9 +649,8 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
 
                                if(mpi_spatialRank == 0)
                                {
-                                 free(pnt_values);
 
-                                  int mpi_statRank; // is the same as the spatialRank
+                                  int mpi_statRank; // is the same as the getSpatialRank
                                   MPI_Comm_rank(coproc_comm, &mpi_statRank);
 
 

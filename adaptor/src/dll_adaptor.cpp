@@ -38,13 +38,14 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
                                           int ngx, int ngy, int ngz, double ax, double ay, double az, double bx,
                                           double by, double bz, int gpu_number );
 
+int getRankIndex(int nx, int ny, int nz, int ngx, int ngy, int ngz, double x, double y, double z);
 void make_histogramVTK(const char* variable_name, const int pntidx,  double* values, const int values_size,
                       const double min, const double max, const int nbins,
                       vtkFloatArray* bins, vtkIntArray* hist);
 
-void write_histogram(const char* variable_name, const int pntidx,  double* values, const int values_size,
-                      const double min, const double max,  const int nbins, const std::string path);
+void write_histogram( const char* variable_name, const std::string pntidx,   const int values_size,double* values, const double min, const double max, const int nbins, const std::string path);
 
+void write_2pt_histogram( const char* variable_name,  const int values_size, const std::string name, double* values1,  const double min1, const double max1, double* values2, const double min2, const double max2, const int nbins, const std::string path);
 
 vtkCPProcessor* Processor = NULL;
 vtkImageData* VTKGrid = NULL;
@@ -361,44 +362,109 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
 
 
 
+
+int getRankIndex(int nx, int ny, int nz, int ngx, int ngy, int ngz, double x, double y, double z)
+{
+        int ix = nx*x+ngx;
+        int iy = ny*y+ngy;
+        int iz = nz*z+ngz;
+        return iz * (nx + 2 * ngx) * (ny + 2 * ngy) + iy * (nx + 2 * ngx) + ix;
+}
+
+
+void getPoints(double* p_x, double* p_y, double* p_z, int n)
+{
+//read from file or something.
+        p_x[0] = 0.5;
+        p_x[1] = 0.75;
+        p_y[0] = 0.5;
+        p_y[1] = 0.75;
+        p_z[0] = 0.5;
+        p_z[1] = 0.5;
+}
+
 void make_pdf( const char* variable_name, const int pntidx,  double* values, const int values_size, const double min, const double max, const int nbins,  vtkFloatArray* bins, vtkIntArray* hist )
 {
 
 }
 
 
-
-void write_histogram( const char* variable_name, const int pntidx,  double* values, const int values_size, const double min, const double max, const int nbins, const std::string path)
+void write_histogram( const char* variable_name, const std::string pntidx,   const int values_size,double* values, const double min, const double max, const int nbins, const std::string path)
 {
-    //    float bins[nbins];
-        int hist[nbins] = {0};
 
+        //    float bins[nbins];
+        int hist[nbins] = {0};
         const double delta = (max-min)/double(nbins-1);
 
-        std::string fname = path+"hist_"+std::string(variable_name)+ std::to_string(pntidx)+".csv";
+        std::string fname = path+"hist_"+std::string(variable_name)+ pntidx+".csv";
         std::fstream outfile;
         outfile.open(fname,   std::fstream::out  );
 
-   // write the file headers
-
         outfile<<" bins = ["<<min;
-        for(int i =1; i< nbins; i++)
+        for(int i =1; i<= nbins; i++)
         {
-              //  bins[i] = i*delta;
-            //    hist[i]=0;
-                outfile <<","<< min+i*delta;
+                outfile <<","<< min+i*(max-min)/double(nbins);
         }
+        outfile<<" ]"<<std::endl;
 
-          outfile<<" ]"<<std::endl;
-
-        for(int i =0; i< values_size; i++)
+        for(int i =0; i<= values_size; i++)
         {
-                int idx = std::floor((*(values+i)-min) /delta);
+                int idx =  (delta<=0) ? 0 : s (*(values+i)-min) /delta;
                 hist[idx] += 1;
         }
 
         outfile<<" values = [ "<<hist[0];
         for(int i =1; i< nbins; i++)
+        {
+                outfile<< ", " << hist[i];
+        }
+        outfile<<" ]"<<std::endl;
+        outfile.close();
+
+}//end_make_histogram
+
+void write_2pt_histogram( const char* variable_name,  const int values_size, const std::string name, double* values1,  const double min1, const double max1, double* values2, const double min2, const double max2, const int nbins, const std::string path)
+{
+
+        int hist[nbins*nbins] = {0};
+        const double delta1 = (max1-min1)/double(nbins-1);
+        const double delta2 = (max2-min2)/double(nbins-1);
+
+        std::string fname = path+"hist_"+std::string(variable_name)+ name+".csv";
+        std::fstream outfile;
+        outfile.open(fname,   std::fstream::out  );
+
+        outfile<<" bins1 = ["<<min1;
+        for(int i =1; i<=nbins; i++)
+        {
+                outfile <<","<< min1+i*(max1-min1)/double(nbins);
+        }
+        outfile<<" ]"<<std::endl;
+
+
+        outfile<<" bins2 = ["<<min2;
+        for(int i =1; i<=nbins; i++)
+        {
+                outfile <<","<< min2+i*(max2-min2)/double(nbins);
+        }
+        outfile<<" ]"<<std::endl;
+
+
+        for(int i =0; i< values_size; i++)
+        {
+                int id1 =  (delta1<=0) ? 0 :  (*(values1+i)-min1) /delta1;
+                int id2 =  (delta2<=0) ? 0 : (*(values2+i)-min2) /delta2;
+                int index = id1 + id2*nbins;
+                hist[index] += 1;
+        //        std::cout<< fname << " " << *(values1+i)<<std::endl;
+        //          std::cout<< fname << " " <<  *(values2+i)<<std::endl;
+
+        }
+
+
+
+        outfile<<" values = [ "<<hist[0];
+        for(int i =1; i< nbins*nbins; i++)
         {
                 outfile<< ", " << hist[i];
         }
@@ -465,8 +531,12 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
 
 
                   //historgram calculcation for specifc points only;
-                  const size_t nii = 2;
-                  int idxOfInterest[nii] = { 30, 156};
+                  const int nii = std::stoi(my_parameters->getParameter("hist_npoints"));
+                  const bool twoPoint = std::stoi(my_parameters->getParameter("hist_2points"));
+                  double px[nii];
+                  double py[nii];
+                  double pz[nii];
+                  getPoints(px,py,pz, nii);
                   double *pnt_values;
                   const int pnt_values_size = nii*nsamples;
 
@@ -479,7 +549,8 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
                           //collect data points from all frames to store all frame values for specifc points
                           for ( int i =0; i<nii; i++)
                           {
-                                  int idx = idxOfInterest[i];
+                                  int idx = getRankIndex(nx, ny, nz,  ngx, ngy, ngz, px[i], py[i], pz[i]);
+
                 //                  std::cout<< "rank, pt " << mpi_rank << " "<< idx<<" " <<*(variable_data+idx)<<std::endl;
                                   MPI_Gather(variable_data+idx, 1,  MPI_DOUBLE,  pnt_values+(i*nsamples), 1, MPI_DOUBLE, 0,  my_parameters->getMPIComm());
                           }
@@ -500,40 +571,31 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
 
                   if(mpi_rank == 0)
                   {
-                                  const std::string path = my_parameters->getParameter("histfolder");
-                                  //historgram calculcation for specifc points only;
-                                  const int nbins = std::stoi(my_parameters->getParameter("histnbins"));
-                                  //  histGrid = vtkBlankStructuredGrid::New();
-                                  //      vtkFieldData* histfield =vtkFieldData::New();
+
+                              //collect data points from all frames to store all frame values for specifc points
+                            const std::string path = my_parameters->getParameter("hist_folder");
+                           //historgram calculcation for specifc points only;
+                            const int nbins = std::stoi(my_parameters->getParameter("hist_nbins"));
 
                                   for ( int i =0; i<nii; i++)
                                    {
-
-                                  //  vtkFloatArray* bins = vtkFloatArray::New();
-                                  //  vtkIntArray* hist = vtkIntArray::New();
-
-                                          //std::pair<int*, int*>
-                                          auto minmax = std::minmax_element(pnt_values+(i*nsamples),pnt_values+(i+1)*nsamples );
+                                        std::string pntname = std::to_string( px[i]).substr(0,4)+"x"+ std::to_string( py[i]).substr(0,4)+"y"+ std::to_string( pz[i]).substr(0,4)+"z_"+std::to_string(time).substr(0,4);
+                                         auto minmax = std::minmax_element(pnt_values+(i*nsamples),pnt_values+(i+1)*nsamples );
                                       //    make_histogram( variable_name, idxOfInterest[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second), nbins,  bins,  hist );
+                                        if(!twoPoint)
+                                        {
+                                            write_histogram(  variable_name, pntname, nsamples, pnt_values+(i*nsamples), *(minmax.first),  *(minmax.second),  nbins, path);
+                                          }
+                                        else if(twoPoint && i <nii-1)
+                                          {
+                                            pntname += "_"+ std::to_string( px[i+1]).substr(0,4)+"x"+ std::to_string( py[i+1]).substr(0,4)+"y"+ std::to_string( pz[i+1]).substr(0,4)+"z_"+std::to_string(time).substr(0,4);
+                                            auto minmax2  = std::minmax_element(pnt_values+(i+1)*nsamples, pnt_values+(i+2)*nsamples);
+                                            write_2pt_histogram( variable_name, nsamples,pntname, pnt_values+(i*nsamples),*(minmax.first),  *(minmax.second), pnt_values+((i+1)*nsamples), *(minmax2.first),  *(minmax2.second),  nbins, path);
 
-                                          write_histogram(  variable_name, idxOfInterest[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second),  nbins, path);
-
-                                          //TODO send historgram to paraview forr all points, e.g. put into blanked out grid
-                                      //    histfield->AddArray(bins);
-                                      //    histfield->AddArray(hist);
-
-                                        //print histogramms to file:
-
-
-
-
-                                      //    hist->Delete();
-                                          //bins->Delete();
-
+                                          }
 
                                   }
 
-                          //        dataDescription->SetUserData(histfield);
 
                                   int extend[6]  = {0,nx-1,0,ny-1,0,nz-1};//{ngx, nx+ngx, ngy, ny+ngy, ngz, 0}; //nz+ngz };
 

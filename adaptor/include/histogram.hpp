@@ -1,4 +1,4 @@
-#include "helper.hpp"
+//#include "helper.hpp"
 
 
 void getPoints(double* p_x, double* p_y, double* p_z, int n)

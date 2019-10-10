@@ -311,7 +311,8 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
         double px[nii];
         double py[nii];
         double pz[nii];
-        getPoints(px,py,pz, nii);
+        //if(mpi_rank==0&& time==0.5 && std::string(variable_name)=="rho"){  getPoints(px,py,pz, 8, true);}
+        getPoints(px,py,pz,8);
 
 
         if(mpi_spatialRank ==0)

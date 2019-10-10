@@ -7,15 +7,24 @@
 #include <algorithm>
 #include <iostream>
 #include <cmath>
-void getPoints(double* p_x, double* p_y, double* p_z, int n)
+void getPoints(double* p_x, double* p_y, double* p_z, int n )
 {
 //read from file or something.
-        p_x[0] = 0.5;
+  double values[2] = {0.5, 0.7};
+
+  for (unsigned int i = 0; i<n; ++i)
+  {
+      p_x[i] =  (i<double(n)/2.)? values[0] : values[1];
+      p_y[i] =  (i%4<2)? values[0] : values[1];
+      p_z[i] =  (i%2)? values[0] : values[1];
+
+}
+      /*  p_x[0] = 0.5;
         p_x[1] = 0.75;
         p_y[0] = 0.5;
         p_y[1] = 0.75;
         p_z[0] = 0.5;
-        p_z[1] = 0.5;
+        p_z[1] = 0.5;*/
 }
 
 

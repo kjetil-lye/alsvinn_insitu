@@ -48,9 +48,7 @@ void write_2pt_histogram( const char* variable_name,  const int values_size, con
 
 void getPoints(double* p_x, double* p_y, double* p_z, int n);
 
-void getRankIndex(int nx, int ny, int nz,  int multiXproc, int multiYproc, int multiZproc, double x, double y, double z, int &spatialrank, int &localindex);
-
-
+void getRankIndex(int nx, int ny, int nz,int ngx, int ngy, int ngz,   int multiXproc, int multiYproc, int multiZproc, double x, double y, double z, int &spatialrank, int &localindex);
 
 vtkCPProcessor* Processor = NULL;
 vtkMultiBlockDataSet* VTKGrid = NULL;
@@ -670,14 +668,13 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                 int locPntIndex = 0;
                 int pointSR2 = 0;
                 int locPntIndex2 = 0;
-                getRankIndex(nx, ny, nz,  multiXproc, multiYproc, multiZproc, px[i], py[i], pz[i], pointSR,  locPntIndex);
-                      sqr_variable_data[locPntIndex]=mpi_rank;
+                getRankIndex(nx, ny, nz,ngx,ngy,ngz,  multiXproc, multiYproc, multiZproc, px[i], py[i], pz[i], pointSR,  locPntIndex);
+
 
                 if( twoPoint && i <nii-1)
                 {
-                        getRankIndex(nx, ny, nz,  multiXproc, multiYproc, multiZproc, px[i+1], py[i+1], pz[i+1], pointSR2,  locPntIndex2);
-                        sqr_variable_data[locPntIndex2]=mpi_rank;
-                }
+                        getRankIndex( nx, ny, nz,ngx,ngy,ngz, multiXproc, multiYproc, multiZproc, px[i+1], py[i+1], pz[i+1], pointSR2,  locPntIndex2);
+                  }
                 //      std::cout<<" local points index "<< locPntIndex <<" ndata "<< ndata<<std::endl;
                 //      std::cout<<" local points rank       "<< pointSR<<"  - "<< getSpatialRank(mpi_rank, numProcS)<<std::endl;
 
@@ -687,7 +684,7 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                 {
 
                         //       std::cout<<"rank       "<< mpi_rank<<"  - "<< getSpatialRank(mpi_rank, numProcS)<< "  - "<< mpi_spatialRank<<std::endl;
-                        MPI_Gather(sqr_variable_data+locPntIndex, 1,  MPI_DOUBLE,  pnt_values, 1, MPI_DOUBLE, 0,  spatialComm);
+                        MPI_Gather(variable_data+locPntIndex, 1,  MPI_DOUBLE,  pnt_values, 1, MPI_DOUBLE, 0,  spatialComm);
                         if(mpi_spatialRank ==0)
                         {
                                 //          std::cout<<"rank       "<< mpi_rank<< " gaather       "<< pnt_values[0] <<"  - "<<  pnt_values[1]  <<"  - "<<  pnt_values[2] <<"  - "<<  pnt_values[3]<<std::endl;
@@ -708,7 +705,7 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                 if(twoPoint && i <nii-1 && pointSR2 ==  getSpatialRank(mpi_rank, numProcS))
                 {
 
-                          MPI_Gather(sqr_variable_data+locPntIndex2, 1,  MPI_DOUBLE,  pnt_values2, 1, MPI_DOUBLE, 0,  spatialComm);
+                          MPI_Gather(variable_data+locPntIndex2, 1,  MPI_DOUBLE,  pnt_values2, 1, MPI_DOUBLE, 0,  spatialComm);
 
                           if(mpi_spatialRank ==0)
                           {

@@ -24,6 +24,8 @@
 #include <vtkMPI.h>
 #include <iterator>
 
+#include<cmath>
+
 #define ADAPTOR_USE_MPI_ON  1
 #define ADAPTOR_HISTORGAM 1
 #define ADAPTOR_USE_VTKCPPROCESSOR 0
@@ -385,6 +387,13 @@ void getPoints(double* p_x, double* p_y, double* p_z, int n)
 
 void make_pdf( const char* variable_name, const int pntidx,  double* values, const int values_size, const double min, const double max, const int nbins,  vtkFloatArray* bins, vtkIntArray* hist )
 {
+
+    const int R = 6;
+    const int M = values_size;
+
+
+
+
 
 }
 

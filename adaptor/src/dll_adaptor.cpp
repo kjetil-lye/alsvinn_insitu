@@ -499,7 +499,7 @@ void write_histogram( const char* variable_name, const std::string pntidx,  doub
 
         //    float bins[nbins];
         int hist[nbins] = {0};
-        const double delta = (max-min)/double(nbins);
+        const double delta = (max-min)/double(nbins-1);
 
         std::string fname = path+"hist_"+std::string(variable_name)+ pntidx+".csv";
         std::fstream outfile;
@@ -668,6 +668,7 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                 int locPntIndex = 0;
                 int pointSR2 = 0;
                 int locPntIndex2 = 0;
+
                 getRankIndex(nx, ny, nz,ngx,ngy,ngz,  multiXproc, multiYproc, multiZproc, px[i], py[i], pz[i], pointSR,  locPntIndex);
 
 
@@ -675,6 +676,7 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                 {
                         getRankIndex( nx, ny, nz,ngx,ngy,ngz, multiXproc, multiYproc, multiZproc, px[i+1], py[i+1], pz[i+1], pointSR2,  locPntIndex2);
                   }
+
                 //      std::cout<<" local points index "<< locPntIndex <<" ndata "<< ndata<<std::endl;
                 //      std::cout<<" local points rank       "<< pointSR<<"  - "<< getSpatialRank(mpi_rank, numProcS)<<std::endl;
 

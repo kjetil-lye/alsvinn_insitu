@@ -1,6 +1,4 @@
 
-#--------------------------------------------------------------
-
 # Global timestep output options
 timeStepToStartOutputAt=0
 forceOutputAtFirstCall=False
@@ -23,6 +21,7 @@ from paraview import coprocessing
 outputfrequency= 1
 
 
+
         # =================================OUTPUT DEFINITIONS================================
 def getFields():
     return [['E_mean', 0], ['E_var', 0], ['mx_mean', 0], ['mx_var', 0], ['my_mean', 0], ['my_var', 0], ['mz_mean', 0], ['mz_var', 0], ['rho_mean', 0], ['rho_var', 0]]
@@ -36,6 +35,7 @@ def getImageSize(nx,nz,ny):
     w = min(hdw, (d-1)*max(nx,ny,nz))
     h = min(hdh, (d-1)*max(nx,ny,nz))
     return w,h
+
 
 def getRGBPoints(vname):
     #same order as getFields()
@@ -103,10 +103,9 @@ def CreateCoProcessor():
 
         #  grid = input.GetClientSideObject().GetOutputDataObject(0)
           fieldname =  fields[ifield][0]
-
-         # pixelw,pixelh = getImageSize(64,64,64)
+          # pixelw,pixelh = getImageSize(64,64,64)
           pixelw,pixelh = 1920,1080
-          #### disable automatic camera reset on 'Show'
+           #### disable automatic camera reset on 'Show'
           paraview.simple._DisableFirstRenderCameraReset()
 
           # Create a new 'Render View'

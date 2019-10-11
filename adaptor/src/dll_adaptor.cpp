@@ -288,8 +288,8 @@ void CatalystCoProcesHistogram(void* data, void* parameters, double time,
                                    {
                                         std::string pntname = std::to_string( px[i]).substr(0,4)+"x"+ std::to_string( py[i]).substr(0,4)+"y"+ std::to_string( pz[i]).substr(0,4)+"z_"+std::to_string(time).substr(0,4);
                                          auto minmax = std::minmax_element(pnt_values+(i*nsamples),pnt_values+(i+1)*nsamples );
-                                      //    make_histogram( variable_name, idxOfInterest[i],  pnt_values+i*nsamples, nsamples, *(minmax.first),  *(minmax.second), nbins,  bins,  hist );
-                                        if(!twoPoint)
+
+                                    if(!twoPoint)
                                         {
                                             write_histogram(  variable_name, pntname, nsamples, pnt_values+(i*nsamples), *(minmax.first),  *(minmax.second),  nbins, path);
                                           }

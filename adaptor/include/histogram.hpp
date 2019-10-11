@@ -14,12 +14,15 @@ int getRankIndex(int nx, int ny, int nz, int ngx, int ngy, int ngz, double x, do
 void getPoints(double* p_x, double* p_y, double* p_z, int n)
 {
 //read from file or something.
-        p_x[0] = 0.5;
-        p_x[1] = 0.75;
-        p_y[0] = 0.5;
-        p_y[1] = 0.75;
-        p_z[0] = 0.5;
-        p_z[1] = 0.5;
+      double values[2] = {0.5, 0.7};
+
+      for (unsigned int i = 0; i<n; ++i)
+      {
+      p_x[i] =  (i<double(n)/2.)? values[0] : values[1];
+      p_y[i] =  (i%4<2)? values[0] : values[1];
+      p_z[i] =  (i%2)? values[0] : values[1];
+
+      }
 }
 
 
@@ -138,7 +141,7 @@ void make_histogramVTK( const char* variable_name, const int pntidx,  double* va
 
 
 
-//is undone 
+//is undone
     void make_pdf( const char* variable_name, const int pntidx,  double* values, const int values_size, const double min, const double max, const int nbins,  float* bins, int* hist )
 {
 

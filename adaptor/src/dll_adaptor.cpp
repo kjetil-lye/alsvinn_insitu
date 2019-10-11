@@ -353,13 +353,13 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                         if(mpi_spatialRank ==0)
                         {
                                 //          std::cout<<"rank       "<< mpi_rank<< " gaather       "<< pnt_values[0] <<"  - "<<  pnt_values[1]  <<"  - "<<  pnt_values[2] <<"  - "<<  pnt_values[3]<<std::endl;
-                                if (!twoPoint)
+                                if (true)// !twoPoint)
                                 {
                                     std::string pntname = std::to_string( px[i]).substr(0,4)+"x"+ std::to_string( py[i]).substr(0,4)+"y"+ std::to_string( pz[i]).substr(0,4)+"z_"+std::to_string(time).substr(0,4);
                                     auto minmax = std::minmax_element(pnt_values, pnt_values+pnt_values_size );
                                     write_histogram(  variable_name,  pntname,  pnt_values, pnt_values_size, *(minmax.first),  *(minmax.second),  nbins, path);
                                 }
-                                else if( pointSR != pointSR2 && i <nii-1 )     //only have to send it to different node if ppoints are not on same!
+                                 if(twoPoint&& pointSR != pointSR2 && i <nii-1 )     //only have to send it to different node if ppoints are not on same!
                                 {
                                         MPI_Send(pnt_values, pnt_values_size, MPI_DOUBLE, pointSR2, 0, MPI_COMM_WORLD);
                                 }

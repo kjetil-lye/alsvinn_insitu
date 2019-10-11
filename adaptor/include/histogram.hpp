@@ -30,25 +30,21 @@ void getPoints(double* p_x, double* p_y, double* p_z, int n )
 
 void getRankIndex(int nx, int ny, int nz,int ngx, int ngy, int ngz,   int multiXproc, int multiYproc, int multiZproc, double x, double y, double z, int &spatialrank, int &localindex)
 {
+        //total numer of cells
         int nnx = nx+2*ngx;
-        int nny = ny*2*ngy;
-        int nnz = nz*2*ngz;
-
+        int nny = ny+2*ngy;
+        int nnz = nz+2*ngz;
+        // global indices
         int idx = nnx*multiXproc*x;
         int idy = nny*multiYproc*y;
         int idz = nnz*multiZproc*z;
-//  std::cout<< "nx "<< nx<<" x "<<x <<" idx "<<idx<<std::endl;
-//  std::cout<< "ny "<< ny<<" y "<<y <<" idx "<<idy<<std::endl;
-//  std::cout<< "nz "<< nz<<" z "<<z <<" idx "<<idz<<std::endl;
+        //block domain indices
         int domx = std::floor(idx/nnx);
         int domy = std::floor(idy/nny);
         int domz = std::floor(idz/nnz);
 
-        spatialrank = domx +domy*(multiXproc)+domz*(multiXproc)*(multiXproc);
+        spatialrank = domx + domy*multiXproc+domz*multiYproc*multiXproc;
         localindex = (idx%nnx) + (idy%nny)*nnx + (idz%nnz)*nnx*nny;
-
-        //std::cout<<" local points index "<< localindex<<std::endl;
-        //  std::cout<<" local points rank "<< spatialrank<<std::endl;
 }
 
 

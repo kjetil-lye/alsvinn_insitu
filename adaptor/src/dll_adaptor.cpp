@@ -329,10 +329,6 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
         //historgram calculcation for specifc points only;
         const int nbins = std::stoi(my_parameters->getParameter("hist_nbins"));
 
-        //  std::cout<<"rank       "<< mpi_rank<<"  - "<< getSpatialRank(mpi_rank, numProcS)<< "  - "<< mpi_spatialRank<<std::endl;
-
-        //MPI_Barrier(spatialComm);
-
 
         for ( int i =0; i<nii; i++)
         {
@@ -348,11 +344,6 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                 {
                         getRankIndex( nx, ny, nz,ngx,ngy,ngz, multiXproc, multiYproc, multiZproc, px[i+1], py[i+1], pz[i+1], pointSR2,  locPntIndex2);
                   }
-
-                //      std::cout<<" local points index "<< locPntIndex <<" ndata "<< ndata<<std::endl;
-                //      std::cout<<" local points rank       "<< pointSR<<"  - "<< getSpatialRank(mpi_rank, numProcS)<<std::endl;
-
-
 
                 if(pointSR ==  getSpatialRank(mpi_rank, numProcS) )
                 {

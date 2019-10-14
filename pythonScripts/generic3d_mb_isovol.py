@@ -86,23 +86,23 @@ def getPWFPoints(vname):
 
 def getThresholdRange(vname):
     tablepwf = {}
-    tablepwf['E_mean'] = [5.75, 1000]
+
     tablepwf['rho_var']= [0.9512946706386292, 1000]
+    tablepwf['rho_mean']=[1.1, 1000]
+
     tablepwf['E_var']= [5.12946706386292, 1000]
+    tablepwf['E_mean'] = [5.75, 1000]
 
     tablepwf['mx_mean']=[-100, 0]
-
-    tablepwf['mx_var']=[0, 100 ]
+    tablepwf['mx_var']=[0, 1000 ]
 
     tablepwf['my_mean']=[-100, 0.0]
-
-    tablepwf['my_var']=[0, 100 ]
+    tablepwf['my_var']=[0, 1000 ]
 
     tablepwf['mz_mean']=[-100, 0.0]
+    tablepwf['mz_var']=[0, 1000 ]
 
-    tablepwf['mz_var']=[0, 100 ]
 
-    tablepwf['rho_mean']=[1.1, 1000]
 
     return tablepwf[vname]
 

@@ -144,11 +144,11 @@ void write_timers(std::vector<double> timers, int rank, std::string path)
         std::fstream outfile;
         outfile.open(fname,   std::fstream::out  );
 	outfile<<"{"<<std::endl;
-        outfile<<"\t"<<"\"Timing:\""<<std::endl;
+        outfile<<"\t"<<"\"Timing\" :"<<std::endl;
 	outfile<<"\t {"<<std::endl;
         for(int i =0; i< 10; i++)
         {
-		outfile<<"\t"<<"\t \" " << names[i]<< "\" : "<<std::to_string(timers[i])<<","<<std::endl;
+		outfile<<"\t"<<"\t \"" << names[i]<< "\" : "<<std::to_string(timers[i])<<","<<std::endl;
         }
 
 	outfile<<"\t"<<"\t \" " << names[10]<<  "\" : "<<std::to_string(timers[10])<<std::endl;

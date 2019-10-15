@@ -26,7 +26,9 @@
 #include <vtkMultiBlockDataSet.h>
 #include <vtkMultiPieceDataSet.h>
 #include <vtkMultiProcessController.h>
-
+#include <chrono>
+#include <ctime>
+#include <ratio>
 
 #define ADAPTOR_HISTORGAM 1
 
@@ -59,6 +61,7 @@ MPI_Comm spatialComm;
 MPI_Comm coproc_comm;
 vtkMPICommunicatorOpaqueComm* Comm = NULL;
 vtkCPDataDescription*  dataDescription = NULL;  //vtkCPDataDescription::New();
+std::vector<double> timers(11, 0.0);
 
 
 
@@ -155,11 +158,15 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
 
         if(ADAPTOR_HISTORGAM)
         {
-
+		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
                 CatalystCoProcessHistogram(data, parameters, time, variable_name,  variable_data, nx,  ny,  nz,
                                            ngx,  ngy,  ngz,  ax,  ay,  az,  bx,
                                            by,  bz,  gpu_number );
 
+		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+		timers[0] += timespan.count();
+		
         }
         else
         {
@@ -290,18 +297,37 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
         double avrg_sqr_data[ndata];
 
 
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
         MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0,spatialComm);
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+	timers[1] += timespan.count();
+		
+
+	 t1 = std::chrono::high_resolution_clock::now();
 
         double sqr_variable_data[ndata];
         //get squared sum to use for variance, reuse variable_data to save space
         for (int i = 0; i< ndata; ++i) {
                 sqr_variable_data[i] = variable_data[i]*variable_data[i];
         }
+ 	
+	t2 = std::chrono::high_resolution_clock::now();
+	timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+	timers[2] += timespan.count();
+
+	t1 = std::chrono::high_resolution_clock::now();
 
         MPI_Reduce(&sqr_variable_data, avrg_sqr_data, ndata, MPI_DOUBLE, MPI_SUM, 0, spatialComm);
 
+	t2 = std::chrono::high_resolution_clock::now();
+	timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+	timers[3] += timespan.count();
 
 
+
+
+	t1 = std::chrono::high_resolution_clock::now();
         const int nii = std::stoi(my_parameters->getParameter("hist_npoints"));
         const bool twoPoint = std::stoi(my_parameters->getParameter("hist_2points"));
         double *pnt_values;
@@ -323,6 +349,10 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                         pnt_values2 = (double*)malloc(sizeof(double) * (pnt_values_size));
                 }
         }
+	t2 = std::chrono::high_resolution_clock::now();
+	timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+	timers[9] += timespan.count();
+
 
         //collect data points from all frames to store all frame values for specifc points
         const std::string path = my_parameters->getParameter("hist_folder");
@@ -330,6 +360,8 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
         const int nbins = std::stoi(my_parameters->getParameter("hist_nbins"));
 
 
+
+	t1 = std::chrono::high_resolution_clock::now();
         for ( int i =0; i<nii; i++)
         {
                 int pointSR = 0;
@@ -348,9 +380,15 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                 if(pointSR ==  getSpatialRank(mpi_rank, numProcS) )
                 {
 
+                       	t1 = std::chrono::high_resolution_clock::now();
                         //       std::cout<<"rank       "<< mpi_rank<<"  - "<< getSpatialRank(mpi_rank, numProcS)<< "  - "<< mpi_spatialRank<<std::endl;
                         MPI_Gather(variable_data+locPntIndex, 1,  MPI_DOUBLE,  pnt_values, 1, MPI_DOUBLE, 0,  spatialComm);
-                        if(mpi_spatialRank ==0)
+                       	t2 = std::chrono::high_resolution_clock::now();
+			timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+			timers[5] += timespan.count();
+
+
+			if(mpi_spatialRank ==0)
                         {
                                 //          std::cout<<"rank       "<< mpi_rank<< " gaather       "<< pnt_values[0] <<"  - "<<  pnt_values[1]  <<"  - "<<  pnt_values[2] <<"  - "<<  pnt_values[3]<<std::endl;
                                 if (true)// !twoPoint)
@@ -361,8 +399,13 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                                 }
                                  if(twoPoint&& pointSR != pointSR2 && i <nii-1 )     //only have to send it to different node if ppoints are not on same!
                                 {
+                                	t1 = std::chrono::high_resolution_clock::now();
                                         MPI_Send(pnt_values, pnt_values_size, MPI_DOUBLE, pointSR2, 0, MPI_COMM_WORLD);
-                                }
+                                	t2 = std::chrono::high_resolution_clock::now();
+					timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+					timers[6] += timespan.count();
+
+				 }
                         }
                 }
 
@@ -370,7 +413,12 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                 if(twoPoint && i <nii-1 && pointSR2 ==  getSpatialRank(mpi_rank, numProcS))
                 {
 
+				 	t1 = std::chrono::high_resolution_clock::now();
                           MPI_Gather(variable_data+locPntIndex2, 1,  MPI_DOUBLE,  pnt_values2, 1, MPI_DOUBLE, 0,  spatialComm);
+				 	t2 = std::chrono::high_resolution_clock::now();
+					timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+					timers[7] += timespan.count();
+
 
                           if(mpi_spatialRank ==0)
                           {
@@ -379,14 +427,23 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                                   auto minmax2  = std::minmax_element(pnt_values2, pnt_values2+nsamples );
                                   if(pointSR != pointSR)
                                   {
+                                 	t1 = std::chrono::high_resolution_clock::now();
                                     MPI_Recv(pnt_values, pnt_values_size, MPI_DOUBLE, pointSR, 0, MPI_COMM_WORLD,   MPI_STATUS_IGNORE);
-                                 }
+                                 	t2 = std::chrono::high_resolution_clock::now();
+					timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+					timers[8] += timespan.count();
+
+				}
                                   auto minmax = std::minmax_element(pnt_values, pnt_values+pnt_values_size );
                                   write_2pt_histogram(  variable_name,  pnt_values_size, pntname, pnt_values, *(minmax.first),  *(minmax.second),  pnt_values2, *(minmax2.first),  *(minmax2.second),  nbins, path);
                           }
 
                 }
         }          //end for nii
+
+	t2 = std::chrono::high_resolution_clock::now();
+	timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+	timers[4] += timespan.count();
 
 
 
@@ -427,9 +484,11 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                         VTKGrid->SetBlock(0, multiPiece.GetPointer());
                 }
 
-                fillGrid(mpi_rank, numProcS, multiXproc,multiYproc, multiZproc, variable_name,  nx,  ny,  nz, ngx,  ngy,  ngz, avrg_data, avrg_sqr_data, norm_samples);
-
-
+		    t1 = std::chrono::high_resolution_clock::now();
+         	   fillGrid(mpi_rank, numProcS, multiXproc,multiYproc, multiZproc, variable_name,  nx,  ny,  nz, ngx,  ngy,  ngz, avrg_data, avrg_sqr_data, norm_samples);
+		t2 = std::chrono::high_resolution_clock::now();
+		timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+		timers[10] += timespan.count();
 
         }          //end rank 0
 
@@ -564,8 +623,8 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
 
 
 DLL_ADAPTOR_EXPORT void delete_data(void* data) {
-
-        std::cout << "In delete_data" << std::endl;
+       
+std::cout << "In delete_data" << std::endl;
         if (Processor)
         {
                 Processor->Delete();
@@ -605,7 +664,12 @@ DLL_ADAPTOR_EXPORT void* make_parameters() {
 
 
 DLL_ADAPTOR_EXPORT void delete_parameters(void* parameters) {
-
+	auto my_parameters = static_cast<MyParameters*>(parameters);
+        int mpi_rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+        const std::string path = my_parameters->getParameter("hist_folder");
+	write_timers(timers, mpi_rank, path);
+        
         std::cout << "In delete_parameters" << std::endl;
         delete static_cast<MyParameters*>(parameters);
 }

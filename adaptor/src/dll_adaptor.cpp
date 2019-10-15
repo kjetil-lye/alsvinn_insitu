@@ -380,11 +380,10 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                 if(pointSR ==  getSpatialRank(mpi_rank, numProcS) )
                 {
 
-                       	t1 = std::chrono::high_resolution_clock::now();
-                        //       std::cout<<"rank       "<< mpi_rank<<"  - "<< getSpatialRank(mpi_rank, numProcS)<< "  - "<< mpi_spatialRank<<std::endl;
+	std::chrono::high_resolution_clock::time_point t3= std::chrono::high_resolution_clock::now();
                         MPI_Gather(variable_data+locPntIndex, 1,  MPI_DOUBLE,  pnt_values, 1, MPI_DOUBLE, 0,  spatialComm);
-                       	t2 = std::chrono::high_resolution_clock::now();
-			timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+	std::chrono::high_resolution_clock::time_point t4= std::chrono::high_resolution_clock::now();
+			timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t4-t3);
 			timers[5] += timespan.count();
 
 
@@ -399,10 +398,10 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                                 }
                                  if(twoPoint&& pointSR != pointSR2 && i <nii-1 )     //only have to send it to different node if ppoints are not on same!
                                 {
-                                	t1 = std::chrono::high_resolution_clock::now();
+                                	t3 = std::chrono::high_resolution_clock::now();
                                         MPI_Send(pnt_values, pnt_values_size, MPI_DOUBLE, pointSR2, 0, MPI_COMM_WORLD);
-                                	t2 = std::chrono::high_resolution_clock::now();
-					timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+                                	t4 = std::chrono::high_resolution_clock::now();
+					timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t4-t3);
 					timers[6] += timespan.count();
 
 				 }
@@ -413,10 +412,10 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                 if(twoPoint && i <nii-1 && pointSR2 ==  getSpatialRank(mpi_rank, numProcS))
                 {
 
-				 	t1 = std::chrono::high_resolution_clock::now();
+	std::chrono::high_resolution_clock::time_point t3= std::chrono::high_resolution_clock::now();
                           MPI_Gather(variable_data+locPntIndex2, 1,  MPI_DOUBLE,  pnt_values2, 1, MPI_DOUBLE, 0,  spatialComm);
-				 	t2 = std::chrono::high_resolution_clock::now();
-					timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+	std::chrono::high_resolution_clock::time_point t4= std::chrono::high_resolution_clock::now();
+					timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t4-t3);
 					timers[7] += timespan.count();
 
 
@@ -427,10 +426,10 @@ void CatalystCoProcessHistogram(void* data, void* parameters, double time,
                                   auto minmax2  = std::minmax_element(pnt_values2, pnt_values2+nsamples );
                                   if(pointSR != pointSR)
                                   {
-                                 	t1 = std::chrono::high_resolution_clock::now();
+                                 	t3 = std::chrono::high_resolution_clock::now();
                                     MPI_Recv(pnt_values, pnt_values_size, MPI_DOUBLE, pointSR, 0, MPI_COMM_WORLD,   MPI_STATUS_IGNORE);
-                                 	t2 = std::chrono::high_resolution_clock::now();
-					timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+                                 	t4 = std::chrono::high_resolution_clock::now();
+					timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t4-t3);
 					timers[8] += timespan.count();
 
 				}

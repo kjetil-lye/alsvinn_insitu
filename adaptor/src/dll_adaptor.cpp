@@ -30,7 +30,7 @@
 #include <ctime>
 #include <ratio>
 
-#define ADAPTOR_HISTORGAM 1
+#define ADAPTOR_HISTORGAM 0 
 
 #define PRINTL { int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank); std::cerr << "In GLOBAL RANK " << rank << ", at line: " <<__LINE__ << std::endl; }
 
@@ -61,13 +61,13 @@ MPI_Comm spatialComm;
 MPI_Comm coproc_comm;
 vtkMPICommunicatorOpaqueComm* Comm = NULL;
 vtkCPDataDescription*  dataDescription = NULL;  //vtkCPDataDescription::New();
-std::vector<double> timers(11, 0.0);
-
+std::vector<double> timers(12, 0.0);
+std::chrono::high_resolution_clock::time_point t1_global;
 
 
 void fillGrid(int mpi_rank, int numProcS, int multiXproc,int multiYproc, int multiZproc, const char* variable_name, int nx, int ny, int nz, int ngx, int ngy, int ngz, double avrg_data[], double avrg_sqr_data[], int norm_samples)
 {
-
+PRINTL
         int mpi_statRank; // is the same as the spatialRank
         MPI_Comm_rank(coproc_comm, &mpi_statRank);
 
@@ -120,6 +120,7 @@ void fillGrid(int mpi_rank, int numProcS, int multiXproc,int multiYproc, int mul
                         for (int x = ngx; x < nx + ngx; ++x) {
 
                                 localIndex = z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x;
+                                //localIndex = (nz <2) ?  y * (nx + 2 * ngx) + x :  z * (nx + 2 * ngx) * (ny + 2 * ngy) + y * (nx + 2 * ngx) + x; 
                                 globalIndex = (nz <2) ? (y-ngy  )*nx + (x -ngx  ) :  (z-ngz)*nx*ny + (y-ngy  )*nx + (x -ngx  );
                                 double tmp = avrg_data[localIndex]/double(norm_samples);
                                 field_array_mean->SetValue(globalIndex, tmp);
@@ -187,6 +188,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 MPI_Comm_rank(spatialComm, &mpi_spatialRank);
                 int mpi_spatialSize; // is the same as number of samples
                 MPI_Comm_size(spatialComm, &mpi_spatialSize);
+PRINTL
 
 
                 //check if we can run all in parallel:
@@ -248,7 +250,9 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                                 VTKGrid->SetBlock(0, multiPiece.GetPointer());
                         }
 
-                        fillGrid(mpi_rank, numProcS, multiXproc,multiYproc, multiZproc, variable_name,  nx,  ny,  nz, ngx,  ngy,  ngz, avrg_data, avrg_sqr_data, norm_samples);
+ PRINTL
+                       fillGrid(mpi_rank, numProcS, multiXproc,multiYproc, multiZproc, variable_name,  nx,  ny,  nz, ngx,  ngy,  ngz, avrg_data, avrg_sqr_data, norm_samples);
+PRINTL
 
                 }
 
@@ -579,6 +583,7 @@ DLL_ADAPTOR_EXPORT void set_mpi_comm(void* data, void* parameters,
 DLL_ADAPTOR_EXPORT void new_timestep(void* data, void* parameters, double time,
                                      int timestep_number) {
 
+	 t1_global = std::chrono::high_resolution_clock::now();
         auto my_parameters = static_cast<MyParameters*>(parameters);
         int mpi_rank;
         MPI_Comm_rank(my_parameters->getMPIComm(), &mpi_rank);
@@ -617,7 +622,10 @@ DLL_ADAPTOR_EXPORT void end_timestep(void* data, void* parameters, double time,
                 }
                 dataDescription->Delete();
         }
-
+		std::chrono::high_resolution_clock::time_point t2_l = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2_l-t1_global);
+		timers[11] += timespan.count();
+	
 }
 
 

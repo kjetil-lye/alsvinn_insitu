@@ -45,9 +45,15 @@ void getRankIndex(int nx, int ny, int nz,int ngx, int ngy, int ngz,   int multiX
         int domx = std::floor(idx/nnx);
         int domy = std::floor(idy/nny);
         int domz = std::floor(idz/nnz);
-
-        spatialrank = domx + domy*multiXproc+domz*multiYproc*multiXproc;
-        localindex = (idx%nnx) + (idy%nny)*nnx + (idz%nnz)*nnx*nny;
+	
+        spatialrank = domx + domy*multiXproc; //+domz*multiYproc*multiXproc;
+        if(nz>1){ //3d
+		spatialrank += domz*multiYproc*multiXproc;
+		localindex = (idx%nnx) + (idy%nny)*nnx + (idz%nnz)*nnx*nny;
+	}else //2d case
+	{
+		localindex = (idx%nnx) + (idy%nny)*nnx;
+	}	
 }
 
 
@@ -139,19 +145,20 @@ void write_2pt_histogram( const char* variable_name,  const int values_size, con
 
 void write_timers(std::vector<double> timers, int rank, std::string path)
 {
-	std::string names[11] = {"total", "mpi_reduce", "square for loop" , "mpi reduce 2", "loop over histogramm points", "mpi gather", "mpi send","mpi gather 2nd point", "mpi receive", "malloc", "gridfill()"};
+	const int n = 12;
+	std::string names[n] = {"coprocess_fct", "mpi_reduce", "square for loop" , "mpi_reduce2", "histogramm loop ", "mpi_gather", "mpi_send","mpi_gather2", "mpi_receive", "malloc", "gridfill()", "total"};
 	std::string fname = path+"timings_rank"+std::to_string(rank)+".json";
         std::fstream outfile;
         outfile.open(fname,   std::fstream::out  );
 	outfile<<"{"<<std::endl;
         outfile<<"\t"<<"\"Timing\" :"<<std::endl;
 	outfile<<"\t {"<<std::endl;
-        for(int i =0; i< 10; i++)
+        for(int i =0; i< n; i++)
         {
 		outfile<<"\t"<<"\t \"" << names[i]<< "\" : "<<std::to_string(timers[i])<<","<<std::endl;
         }
 
-	outfile<<"\t"<<"\t \" " << names[10]<<  "\" : "<<std::to_string(timers[10])<<std::endl;
+	outfile<<"\t"<<"\t \" " << names[n]<<  "\" : "<<std::to_string(timers[n])<<std::endl;
 	outfile<<" \t}"<<std::endl;
 	outfile<<"}"<<std::endl;
         outfile.close();

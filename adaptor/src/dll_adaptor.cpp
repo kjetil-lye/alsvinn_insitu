@@ -171,7 +171,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
         }
         else
         {
-
+                std::chrono::high_resolution_clock::time_point t11 = std::chrono::high_resolution_clock::now();
                 auto my_parameters = static_cast<MyParameters*>(parameters);
 
                 std::string mb = my_parameters->getParameter("multiblock");
@@ -204,15 +204,30 @@ PRINTL
 
                 //    MPI_Op op;
                 //  MPI_Op_create( (MPI_User_function *)addsquared, 1, &op);
-
+                std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
                 double sqr_variable_data[ndata];
                 //get squared sum to use for variance, reuse variable_data to save space
                 for (int i = 0; i< ndata; ++i) {
                         sqr_variable_data[i] = std::pow( variable_data[i], 2);
                 }
 
+	        
+                std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+	        timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+	        timers[2] += timespan.count();
+
+                 t1 = std::chrono::high_resolution_clock::now();
                 MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, spatialComm);
+
+                 t2 = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double> timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+                timers[1] += timespan.count();
+
+                t1 = std::chrono::high_resolution_clock::now();
                 MPI_Reduce(&sqr_variable_data, avrg_sqr_data, ndata, MPI_DOUBLE, MPI_SUM, 0, spatialComm);
+                t2 = std::chrono::high_resolution_clock::now();
+                timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+                timers[3] += timespan.count();
 
                 if( mpi_spatialRank == 0 )
                 {
@@ -250,12 +265,16 @@ PRINTL
                                 VTKGrid->SetBlock(0, multiPiece.GetPointer());
                         }
 
- PRINTL
+                        t1 = std::chrono::high_resolution_clock::now();
                        fillGrid(mpi_rank, numProcS, multiXproc,multiYproc, multiZproc, variable_name,  nx,  ny,  nz, ngx,  ngy,  ngz, avrg_data, avrg_sqr_data, norm_samples);
-PRINTL
+                        t2 = std::chrono::high_resolution_clock::now();
+		        timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+		        timers[10] += timespan.count();
 
                 }
-
+                std::chrono::high_resolution_clock::time_point t22 = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t22-t11);
+		timers[0] += timespan.count();
         }
 
 }

@@ -188,7 +188,7 @@ DLL_ADAPTOR_EXPORT void CatalystCoProcess(void* data, void* parameters, double t
                 MPI_Comm_rank(spatialComm, &mpi_spatialRank);
                 int mpi_spatialSize; // is the same as number of samples
                 MPI_Comm_size(spatialComm, &mpi_spatialSize);
-PRINTL
+
 
 
                 //check if we can run all in parallel:
@@ -212,15 +212,15 @@ PRINTL
                 }
 
 	        
-                std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-	        timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+             std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+	     std::chrono::duration<double>   timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
 	        timers[2] += timespan.count();
 
                  t1 = std::chrono::high_resolution_clock::now();
                 MPI_Reduce(variable_data, avrg_data, ndata, MPI_DOUBLE, MPI_SUM, 0, spatialComm);
 
                  t2 = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<double> timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+                timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
                 timers[1] += timespan.count();
 
                 t1 = std::chrono::high_resolution_clock::now();
@@ -273,7 +273,7 @@ PRINTL
 
                 }
                 std::chrono::high_resolution_clock::time_point t22 = std::chrono::high_resolution_clock::now();
-		std::chrono::duration<double> timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t22-t11);
+		timespan = std::chrono::duration_cast<std::chrono::duration<double>>(t22-t11);
 		timers[0] += timespan.count();
         }
 
